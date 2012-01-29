@@ -1,0 +1,141 @@
+#! /usr/bin/env sh
+# This script is part of Martin Vaeth's archwrap project.
+
+Fatal() {
+	printf '%s: %s\n' "${0##*/}" "${*}" >&2
+	exit 2
+}
+
+Usage() {
+	printf '%s\n' \
+"Usage: ${0##*/} [option] ... [option] archive archive ...
+Repack archives.
+Option is one of the following:
+-tmp   Use current directory instead of /tmp for tempdirectory
+-L     convert pathnames into lower case (only for .zip)
+-d     Use pd -d. Assumes that archive contains only directory 'archive'
+-x     Do *not* restore user/group id when restoring (only for .zip)
+-uw    unset write permissions for group/other before repacking
+-ur    unset read/write permissions for group/other before repacking
+-u/-ua unset read/write/execute for group/other before repacking
+-Uw    ignore previous -uw
+-Ur    ignore previous -ur
+-U/-Ua ignore previous -u/-ua
+-r     rename directories rcs into RCS (requires mmv)
+--     last option
+All other options are passed to pd"
+	exit ${1:-1}
+}
+
+unpackl=''
+uall=false
+uread=false
+uwrite=false
+renrcs=false
+withparent=''
+unpackx='-X'
+usetemp=:
+case "${0##*/}" in
+*ppd*) packopt='-A/RLW';;
+esac
+while [ ${#} -gt 0 ]
+do	case "${1}" in
+	--[hH]*|-h|'-?')
+		Usage 0;;
+	-L)	unpackl='-L';;
+	-x)	unpackx='';;
+	-u|-ua)	uall=:;;
+	-ur)	uread=:;;
+	-uw)	uwrite=:;;
+	-r)	renrcs=:;;
+	-U|-Ua)	uall=false;;
+	-Ur)	uread=false;;
+	-Uw)	uwrite=false;;
+	-tmp)	usetemp=false;;
+	-d)	withparent='-d';;
+	--)	shift; break;;
+	-*)	packopt="${packopt} ${1}";;
+	*)	break;;
+	esac
+	shift
+done
+[ -n "${1}" ] || Usage
+
+chmod=:
+if ${uread} || ${uwrite} || ${uall}
+then	chmod=chmod
+	${uread} && ${uwrite} && uall=:
+	${uread}  && chmodarg='go-rx'
+	${uwrite} && chmodarg='go-w'
+	${uall}   && chmodarg='go-rwx'
+fi
+
+currd="${PWD}" || Fatal "cannot determine current directory"
+
+Cd() {
+	cd -- "${1}" >/dev/null 2>&1 || Fatal "cannot cd to ${1}"
+}
+
+rmdirname=''
+Gosane() {
+	trap : EXIT HUP INT TERM
+	cd -- "${currd}" >/dev/null
+	[ -n "${rmdirname}" ] && test -d "${rmdirname}" && \
+		rm -rf -- "${rmdirname}" && rmdirname=''
+	trap - EXIT HUP INT TERM
+}
+
+for repack
+do	test -d "${repack}" || continue
+	repackp=`readlink -f -- "${repack}"` && [ -n "${repackp}" ] \
+		&& test -d "${repackp}" || Fatal "cannot resolve ${repack}"
+	repackp="${repack%/*}"
+	full="${repack##*/}"
+	blank="${full%.arz}"
+	blank="${blank%.arj}"
+	blank="${blank%.dir}"
+	blank="${blank%.zip}"
+	blank="${blank%.lha}"
+	blank="${blank%.lzh}"
+	blank="${blank%.Z}"
+	blank="${blank%.z}"
+	blank="${blank%.gz}"
+	blank="${blank%.bz}"
+	blank="${blank%.bz2}"
+	blank="${blank%.tgz}"
+	blank="${blank%.tbz}"
+	blank="${blank%.tbz2}"
+	blank="${blank%.7z}"
+	blank="${blank%.7za}"
+	blank="${blank%.lzma}"
+	blank="${blank%.xz}"
+	blank="${blank%.tlz}"
+	blank="${blank%.lrz}"
+	blank="${blank%.tlrz}"
+	blank="${blank%.tlr}"
+	blank="${blank%.txz}"
+	blank="${blank%.tar}"
+	rmdirname=''
+	trap Gosane EXIT HUP INT TERM
+	if [ -n "${usetemp}" ]
+	then	rmdirname=`mktemp -d "/tmp/${0##*/}.XXXXXXXX"` \
+			&& [ -n "${rmdirname}" ] \
+			|| Fatal "cannot create temporary directory"
+		unpackp="${rmdirname}"
+	else	unpackp="${currd}"
+	fi
+	tempdirname="${unpackp}/${blank}"
+	test -r "${tempdirname}" && Fatal "${tempdirname} already exists"
+	Cd "${unpackp}"
+	u -d ${unpackx} ${unpackl} -- "${repackp}/${full}" || \
+		Fatal "cannot unpack ${repackp}/${full}"
+	Cd "${repackp}" >/dev/null
+	${chmod} -R -- "${chmodarg}" "${tempdirname}"
+	${renrcs} && ! test -r "${tempdirname}/RCS" \
+		&& mmv -r -- "${tempdirname}/;rcs" 'RCS'
+	tempsub="${tempdirname}"
+	[ -n "${withparent}" ] && tempsub="${tempsub}/${blank}"
+	pd ${withparent} ${packopt} -- "${tempsub}" || \
+		Fatal "Packing ${tempsub} failed"
+	Gosane
+done

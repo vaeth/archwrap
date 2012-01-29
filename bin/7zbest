@@ -1,0 +1,3 @@
+#! /usr/bin/env sh
+# This script is part of Martin Vaeth's archwrap project.
+exec 7za a -si -so -- "${@}"

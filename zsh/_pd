@@ -1,0 +1,42 @@
+#compdef pd ppd
+_arguments -s -S -A '-*' : \
+'(* -)'{'-h','-H','-\\?'}'[help]' \
+'-X[use long appendix (.tar.gz instead of .tgz etc)]' \
+'-d[pack also (parent) directory into archive, not only its content]' \
+'-C[Store as much as possible (Access Control Lists, creation time...)]' \
+'-c[use secure mode (otherwise -no-fsync is used in star if possible)]' \
+'-s[show only which files would be deleted, do not actually do it]' \
+'-n[deselect all compressors (only delete longer existing archives)]' \
+'-a[select all compressors and leave *.tar]' \
+'-A[select all compressors except plain tar]' \
+'-N[use plain owner name instead of numerical value for .tar]' \
+'-S[use star over tar (default is as in tgzd script)]' \
+'-T[use tar over star (default is as in tgzd script)]' \
+'-t[select tar (*.tar is not deleted, even if it is longer)]' \
+'-U[unselect tar]' \
+'-z[select zip]' \
+'-Z[unselect zip]' \
+'-b[select bzip]' \
+'-B[unselect bzip]' \
+'-g[select gzip]' \
+'-G[unselect gzip]' \
+'-7[select 7z]' \
+'-/[unselect 7z]' \
+'-l[select lzma]' \
+'-L[unselect lzma]' \
+'-w[select xzd]' \
+'-W[unselect xzd]' \
+'-r[select lrzip]' \
+'-R[unselect lrzip]' \
+'-p[assume that already existing archives contain correct contents]' \
+'-F[symbolic links are stored as such]' \
+'-f[symbolic links are stored as files]' \
+'-E[break on error]' \
+'-0[compare exact sizes]' \
+'-5[compare sizes modulo 512 bytes]' \
+'-1[compare sizes modulo 1k]' \
+'-2[compare sizes modulo 2k]' \
+'-4[compare sizes modulo 4k]' \
+'-8[compare sizes modulo 8k]' \
+'-6[compare sizes modulo 16k]' \
+'*:directory:_files -/'

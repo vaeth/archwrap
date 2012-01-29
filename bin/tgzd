@@ -1,0 +1,313 @@
+#! /usr/bin/env sh
+# This script is part of Martin Vaeth's archwrap project.
+
+. archwrap.sh || {
+	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
+	exit 2
+}
+
+set -f
+
+poortar=false
+case "${POORTAR}" in
+1|':'|[yYtT]*)
+	poortar=:
+;;
+esac
+
+Usage() {
+	Echo '%s\n' "Usage: ${0##*/} [options] [path/]zipdir[/][.tgz]
+Create archive ./zipdir.tgz with contents of zipdir
+ -@ path  Store output in path/zipdir.tgz
+          The typical call is -@ user@machine: or -@ user@mach:/tmp/
+          to use remote connection via rsh (GNU tar) resp. ssh (star)
+ -R PATH  Store output in PATH. Use e.g. -R - for piping to standard output
+ -g: Use gzip     (archivename is ./zipdir.tgz or ./zipdir.tar.gz)
+ -b: Use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)
+ -l: Use lzma     (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)
+ -L: Use xz       (archivename is ./zipdir.txz or ./zipdir.tar.xz)
+ -7: Use 7z       (archivename is ./zipdir.t7z or ./zipdir.tar.7z)
+ -r: Use lrzip    (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)
+ -t: Use Tar only (archivename is ./zipdir.tar)
+ -X: Use long names (.tar.gz instead of .tgz etc)
+ -x: Use short names (.tgz instead of .tar.gz etc)
+ -S: Use star (instead of tar)
+ -T: Use tar  (instead of star) (default)
+ -C: Store as much as possible (Access Control Lists, creation time...)
+ -c: Use secure mode (otherwise -no-fsync is used in star if possible)
+ -F: Symbolic links are stored as such (default)
+ -f: Symbolic links are stored as files
+ -E: Break on error
+ -d: Pack also (parent) directory into archive, not only its content
+ -D: Pack (parent) directory as \".\" into archive, not only its content
+ -n: Store plain owner name
+ -p: Use poor tar (without --use-compress-program) (set POORTAR=1 for default)
+ -s: Do not use the sparse option for tar (this is implied by -p)
+ -P: Use GNU tar (with option --use-compress-program) or star"
+	exit ${1:-1}
+}
+
+use_star=false
+# command -v star >/dev/null 2>&1 && use_star=:
+follow=false
+control=false
+withparent=false
+dotparent=false
+xnames=false
+ownernum=:
+sparse=:
+secmode=false
+remote=''
+errbreak=false
+comp='g'
+case "${0##*/}" in
+*lzma*|*.*lz*)
+	comp='l'
+	xnames=:
+;;
+*txz*)
+	comp='x'
+;;
+*xz*)
+	comp='x'
+	xnames=:
+;;
+*bzip*|*.*bz*)
+	comp='b'
+	xnames=:
+;;
+*gzip*|*.*gz*)
+	comp='g'
+	xnames=:
+;;
+*.*7z*)
+	comp='7'
+	xnames=:
+;;
+*.*lr*)
+	comp='r'
+	xnames=:
+;;
+*tbz*)
+	comp='b'
+;;
+*tgz*)
+	comp='g'
+;;
+*7z*)
+	comp='7'
+;;
+*lz*)
+	comp='l'
+;;
+*lr*)
+	comp='r'
+;;
+*tar*)
+	comp=''
+;;
+esac
+OPTIND=1
+while getopts 'F@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
+do	case "${opt}" in
+	F)	follow=false;;
+	S)	use_star=:;;
+	T)	use_star=false;;
+	c)	secmode=:;;
+	C)	control=:;;
+	E)	errbreak=:;;
+	f)	follow=:;;
+	d)	withparent=:; dotparent=false;;
+	D)	withparent=:; dotparent=false;;
+	n)	ownernum='';;
+	t)	comp='';;
+	p)	poortar=:;;
+	P)	poortar=false;;
+	s)	sparse='';;
+	b)	comp="b";;
+	g)	comp="g";;
+	l|z|m)	comp="l";;
+	L)	comp="x";;
+	7)	comp="7";;
+	r)	comp="r";;
+	X)	xnames=:;;
+	x)	xnames=false;;
+	'@')	remote="r"; remotepath="${OPTARG}";;
+	R)	remote="R"; remotepath="${OPTARG}";;
+	*)	Usage 0;;
+	esac
+done
+shift $(( ${OPTIND} - 1 ))
+[ -z "${1}" ] && Usage
+
+if [ -n "${remote}" ]
+then	export RSH
+	[ -n "${RSH}" ] || RSH="$(command -v ssh 2>/dev/null)"
+fi
+
+Push -c taropts '-c' '-v'
+${follow} && Push taropts '-h'
+
+errfile=false
+if ${use_star}
+then	tarprg="star"
+	if ${control}
+	then	Push taropts '-H=exustar' '-acl' '-xfflags'
+	else	Push taropts '-H=pax'
+	fi
+	#Push taropts "-dirmode"
+	${ownernum} && Push taropts '-numeric'
+	${sparse} && Push taropts '-sparse'
+	case ${comp} in
+	g)
+		Push taropts '-z'
+		export STAR_COMPRESS_FLAG='--best'
+	;;
+	b)
+		Push taropts '-bz'
+		export STAR_COMPRESS_FLAG='-9'
+	;;
+	7|l|r)
+		poortar=:
+	;;
+	esac
+	if ! ${secmode}
+	then	"${tarprg}" -c -no-fsync >/dev/null 2>&1 && \
+			Push taropts '-no-fsync'
+	fi
+else	tarprg='tar'
+	${ownernum} && Push taropts '--numeric-owner'
+	case ${comp} in
+	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
+	b)	Push taropts '--use-compress-program' "${0%/*}/bzipbest";;
+	7)	Push taropts '--use-compress-program' "${0%/*}/7zbest";;
+	l)	Push taropts '--use-compress-program' "${0%/*}/lzmabest";;
+	x)	Push taropts '--use-compress-program' "${0%/*}/xzbest";;
+	r)	poortar=:;;
+	esac
+	if ${poortar}
+	then	errfile=:
+	else	${sparse} && Push taropts '-S'
+	fi
+fi
+if ${xnames}
+then	case ${comp} in
+	g)	ext='tar.gz';;
+	b)	ext='tar.bz2';;
+	7)	ext='tar.7z';;
+	l)	ext='tar.lzma';;
+	x)	ext='tar.xz';;
+	r)	ext='tar.lrz';;
+	*)	ext='tar';;
+	esac
+else	case ${comp} in
+	g)	ext='tgz';;
+	b)	ext='tbz';;
+	7)	ext='t7z';;
+	l)	ext='tlz';;
+	x)	ext='txz';;
+	r)	ext='tlr';;
+	*)	ext='tar';;
+	esac
+fi
+
+Tarit() {
+	if [ -z "${remote}" ]
+	then	archive="${d}/${name}.${1}"
+		rm -f -- "${archive}"
+	elif [ "$remote" = "r" ]
+	then	archive="${remotepath}${name}.${1}"
+	else	archive="${remotepath}"
+	fi
+	shift
+	Cd "${dirname}" || return
+	stat=0
+	if ${errfile}
+	then	MkTemp || stat=${?}
+	fi
+	if ${withparent}
+	then	if ${dotparent}
+		then	Push -c topack '.'
+		else	Push -c topack "${name##*/}"
+		fi
+		Cd .. || stat=${?}
+	else	PushTopack || {
+			stat=2
+			Error ${stat} "not creating empty archive ${archive}"
+		}
+	fi
+	[ ${stat} -eq 0 ] && if ${errfile}
+	then	eval "\"\${tarprg}\" \"\${@}\" -f \"\${archive}\" -- ${topack} 2>\"\${tempname}\""
+	else	eval "\"\${tarprg}\" \"\${@}\" -f \"\${archive}\" -- ${topack}"
+	fi || stat=${?}
+	if ${errfile}
+	then	if test -s "${tempname}"
+		then	ErrMessage "tar of ${name} led to the following error message:"
+			cat -- "${tempname}" >&2
+			[ ${stat} -eq 0 ] && stat=2
+		fi
+		RmTemp
+	fi
+	Cd "${d}" || stat=${?}
+	[ ${stat} -ne 0 ] && Error ${stat} "error occured during tar of ${name}"
+}
+
+MainLoop() {
+	d="${PWD}"
+	for progargs
+	do	dirname="${progargs}"
+		while [ "${dirname%/}" != "${dirname}" ]
+		do	dirname="${dirname%/}"
+		done
+		DoDir
+	done
+}
+
+DoDir() {
+	dirname="${dirname%.z}"
+	dirname="${dirname%.gz}"
+	dirname="${dirname%.bz}"
+	dirname="${dirname%.bz2}"
+	dirname="${dirname%.taz}"
+	dirname="${dirname%.tgz}"
+	dirname="${dirname%.tbz}"
+	dirname="${dirname%.dir}"
+	dirname="${dirname%.7z}"
+	dirname="${dirname%.t7z}"
+	dirname="${dirname%.tlz}"
+	dirname="${dirname%.lz}"
+	dirname="${dirname%.lzm}"
+	dirname="${dirname%.lzma}"
+	dirname="${dirname%.lrz}"
+	dirname="${dirname%.tlrz}"
+	dirname="${dirname%.tlr}"
+	dirname="${dirname%.tar}"
+	if [ -z "${dirname}" ] || ! test -d "${dirname}"
+	then	Error 2 "could not find Directory ${dirname}"
+		return
+	fi
+	name="${dirname##*/}"
+	[ -n "${name}" ] || name='_'
+	eval "set -- ${taropts}"
+	if ! ${poortar}
+	then	Tarit "${ext}" "${@}"
+		return
+	fi
+	Tarit tar "${@}"
+	[ -z "${comp}" ] && return
+	case ${comp} in
+	g)	gzipbest -c -- "${archive}" >"${name}.${ext}";;
+	b)	bzipbest -k -c -- "${archive}" >"${name}.${ext}";;
+	7)	7za a -- "${name}.${ext}" "${archive}";;
+	l)	lzmabest -k -c -- "${archive}" >"${name}.${ext}";;
+	x)	xzbest -k -c -- "${archive}" >"${name}.${ext}";;
+	r)	lrzip -L 9 -o "${name}.${ext}" -- "${archive}";;
+	esac || {
+		Error ${?} "error when compressing ${archive}; keeping on disk" >&2
+		return
+	}
+	rm -f -- "${archive}"
+}
+
+MainLoop "${@}"
+Exit

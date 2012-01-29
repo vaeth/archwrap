@@ -1,0 +1,239 @@
+#! /usr/bin/env sh
+# This script is part of Martin Vaeth's archwrap project.
+
+. archwrap.sh || {
+	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
+	exit 2
+}
+
+Usage() {
+	Echo "Usage: ${0##*/} [option] ... [option] directory directory ...
+where option is one of the following:
+-X   use long appendix (.tar.gz instead of .tgz etc)
+-d   pack also (parent) directory into archive, not only its content
+-C   Store as much as possible (Access Control Lists, creation time...)
+-c   use secure mode (otherwise -no-fsync is used in star if possible)
+-s   show only which files would be deleted, do not actually do it
+-n   deselect all compressors (only delete longer existing archives)
+-a   select all compressors and leave *.tar
+-A   select all compressors except plain tar
+-N   use plain owner name instead of numerical value for .tar
+-S/T use star/tar (default is as in tgzd script)
+-t/U select/unselect tar (*.tar is not deleted, even if it is longer)
+-z/Z select/unselect zip
+-b/B select/unselect bzip (by default not selected)
+-g/G select/unselect gzip
+-7// select/unselect 7z
+-l/L select/unselect lzma
+-w/W select/unselect xzd
+-r/R select/unselect lrzip
+-p   assume that already existing archives contain correct contents
+-F   symbolic links are stored as such (default)
+-f   symbolic links are stored as files
+-E   break on error
+-0   compare exact sizes
+-5   compare sizes modulo 512 bytes (default)
+-1/2/4/8/6 compare sizes modulo 1k/2k/4k/8k/16k"
+	exit ${1:-1}
+}
+tgzapp="tgz"
+tbzapp="tbz"
+svzapp="t7z"
+lzmapp="tlz"
+txzapp="txz"
+lrzapp="tlr"
+showonly=''
+preserv=false
+modulo=512
+linksresolve='-F'
+withparent=''
+plainowner=''
+nostar=''
+control=''
+secmode=''
+errbreak=false
+
+Selectall() {
+	withzip=:; withtgz=:; withtbz=:; withsvz=:;
+	withlzm=:; withtxz=:; withlrz=:
+}
+
+Selectall
+withtar=false
+case "${0##*/}" in
+*ppd*)	withsvz=false; withlrz=false; withlzm=false; withtxz=false;;
+esac
+
+OPTIND=1
+while getopts 'XdcCSTsnaA7/lLrWwRNtUzZbBgGpFf0512486EhH?' opt
+do	case "${opt}" in
+	X) tgzapp='tar.gz'; tbzapp='tar.bz2'; svzapp='tar.7z';
+		lzmapp='tar.lzma'; txzapp='tar.xz'; lrzapp='tar.lrz';;
+	d) withparent='-d';;
+	c) secmode='-c';;
+	C) control='-C';;
+	s) showonly=Echo;;
+	n) withzip=false; withtgz=false; withtbz=false; withsvz=false;
+		withlzm=false; withlrz=false; withtar=false;;
+	a) Selectall; withtar=:;;
+	A) Selectall; withtar=false;;
+	N) plainowner='-n';;
+	S) nostar='-S';;
+	t) withtar=:;;
+	z) withzip=:;;
+	b) withtbz=:;;
+	g) withtgz=:;;
+	7) withsvz=:;;
+	l) withlzm=:;;
+	l) withtxz=:;;
+	r) withlrz=:;;
+	T) nostar='-T';;
+	U) withtar=false;;
+	Z) withzip=false;;
+	B) withtbz=false;;
+	G) withtgz=false;;
+	/) withsvz=false;;
+	L) withlzm=false;;
+	W) withtxz=false;;
+	R) withlrz=false;;
+	p) preserv=:;;
+	F) linksresolve='';;
+	f) linksresolve='-f';;
+	0) modulo='';;
+	5) modulo=512;;
+	1) modulo=1024;;
+	2) modulo=2048;;
+	4) modulo=4096;;
+	8) modulo=8192;;
+	6) modulo=16384;;
+	E) errbreak=:;;
+	*) Usage 0;;
+	esac
+done
+shift $(( ${OPTIND} - 1 ))
+[ -n "${1}" ] || Usage 1
+
+Errunp() {
+	Error 2 "Error when calling $1 to create $2"
+}
+
+Remove() {
+	${showonly} rm -- "${@}"
+}
+
+
+# The function Compare expects ${namea} and ${nameb} to be set to the filenames
+# to be compared. It will then delete the larger file (length modulo $modulo),
+# and will set namea to the non-deleted file. If the length is the same,
+# the second file will be deleted.
+# If one or both files do not exist, nothing is deleted. In this case,
+# namea is set to the file which exists (if none exists, it is put to nameb).
+Compare() {
+	if ! test -r "${namea}" || ! sizea=$(stat -c '%s' -- "${namea}") \
+		|| ! [ "${sizea}" -gt 0 ]
+	then	namea="${nameb}"
+		return
+	fi
+	test -r "${nameb}" && sizeb=$(stat -c '%s' -- "${nameb}") \
+		&& [ "${sizeb}" -gt 0 ] || return
+	if [ -n "${modulo}" ]
+	then	sizea=$(( ${sizea} / ${modulo} ))
+		sizeb=$(( ${sizeb} / ${modulo} ))
+	fi
+	if [ ${sizea} -gt ${sizeb} ]
+	then	delname="${namea}"
+		namea="${nameb}"
+	else	delname="${nameb}"
+	fi
+	Remove "${delname}"
+}
+
+Dopack() {
+	topack="${1%/}"
+	if ! test -d "${topack}"
+	then	Error 1 "argument ${destname} is not a directory"
+		continue
+	fi
+	destname="${topack##*/}"
+	zipnow=${withzip}
+	tarnow=${withtar}
+	tgznow=${withtgz}
+	tbznow=${withtbz}
+	svznow=${withsvz}
+	lzmnow=${withlzm}
+	txznow=${withtxz}
+	lrznow=${withlrz}
+	if ${preserv}
+	then	${zipnow} && test -s "${destname}.zip" && zipnow=false
+		${tgznow} && test -s "${destname}.${tgzapp}" && tgznow=false
+		${tbznow} && test -s "${destname}.${tbzapp}" && tbznow=false
+		${svznow} && test -s "${destname}.${svzapp}" && svznow=false
+		${lzmnow} && test -s "${destname}.${lzmapp}" && lzmnow=false
+		${lrznow} && test -s "${destname}.${lrzapp}" && lrznow=false
+	fi
+	if ${tgznow} || ${tbznow} || ${svznow} || ${lzmnow} || ${lrznow}
+	then	tarnow=:
+	fi
+	${preserv} && ${tarnow} && test -s "${destname}.tar" && tarnow=false
+
+	namea="${destname}.zip"
+	if ${zipnow}
+	then	Echo "Creating ${namea}"
+		zipd ${withparent} ${linksresolve} -- "${topack}" \
+			|| Errunp 'zipd' "${namea}"
+	fi
+	if ${tarnow}
+	then	Echo "Creating ${destname}.tar"
+		tgzd -t ${nostar} ${control} ${secmode} ${withparent} ${linksresolve} ${plainowner} -- "${topack}" \
+			|| Errunp 'tgzd' "${destname}.tar"
+	fi
+	nameb="${destname}.${tgzapp}"
+	if ${tgznow}
+	then	Echo "Creating ${nameb}"
+		gzipbest -c -- "${destname}.tar" >"${nameb}" \
+			|| Errunp 'gzip' "${nameb}"
+	fi
+	Compare
+	nameb="${destname}.${tbzapp}"
+	if ${tbznow}
+	then	Echo "Creating ${nameb}"
+		bzipbest -k -c -- "${destname}.tar" >"${nameb}" \
+			|| Errunp 'bzip2' "${nameb}"
+	fi
+	Compare
+	nameb="${destname}.${svzapp}"
+	if ${svznow}
+	then	Echo "Creating ${nameb}"
+		7za a -- "${nameb}" "${destname}.tar" \
+			|| Errunp '7za' "${nameb}"
+	fi
+	Compare
+	nameb="${destname}.${lzmapp}"
+	if ${lzmnow}
+	then	Echo "Creating ${nameb}"
+		lzmabest -k -c -- "${destname}.tar" >"${nameb}" \
+			|| Errunp 'lzma' "${nameb}"
+	fi
+	Compare
+	nameb="${destname}.${txzapp}"
+	if ${txznow}
+	then	Echo "Creating ${nameb}"
+		lzma --best -k -c -- "${destname}.tar" >"${nameb}" \
+			|| Errunp 'lzma' "${nameb}"
+	fi
+	Compare
+	nameb="${destname}.${lrzapp}"
+	if ${lrznow}
+	then	Echo "Creating ${nameb}"
+		lrzip -L 9 -o "${nameb}" -- "${destname}.tar" \
+			|| Errunp 'lrzip' "${nameb}"
+	fi
+	Compare
+	! ${withtar} && ${tarnow} && Remove "${destname}.tar"
+}
+
+for drpck
+do	Dopack "${drpck}"
+done
+
+Exit

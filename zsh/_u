@@ -1,0 +1,24 @@
+#compdef u ud uv
+_arguments -s -S -A '-*' : \
+'(* -)'{'-h','-H','-\\?'}'[help]' \
+'-d[uncompress into new directory ./ARCHIVE instead of .]' \
+'-2+[uncompress into new directory ./ARG instead of .]:destination directory:_files -/' \
+'-v[view contents of ARCHIVE (verbose)]' \
+'-l[list contents of ARCHIVE (non-verbose)]' \
+'-f[force overwrite, if directory ./ARCHIVE already exists]' \
+'-t[test integrity of ARCHIVE]' \
+'-S[Use star instead of tar]' \
+'-T[Use tar instead of star (default)]' \
+'-E[break on error]' \
+'-j[junk pathnames (only for zip, arj, rar, 7z)]' \
+'-L[convert pathnames into lower case (only for .zip)]' \
+'-a[Do not preserve permission attributes (only for .tar)]' \
+'-X[restore user id/group id (only for .zip and .tar) (default for root)]' \
+'-x[do not restore user id/group id]' \
+'-C[restore Access Control Lists (for star)]' \
+'-c[use careful mode (otherwise -no-fsync is used in star if possible)]' \
+'-n[use plain owner name instead of numerical value (only for .tar)]' \
+'-p[Assume poor tar (no gzip/bzip/lzip/xz opts) (set POORTAR=1 for default)]' \
+'-s[Assume semipoor tar (no lzip/xz opts) (set POORTAR=semi for default)]' \
+'-P[Assume lzma tar (no xz opts) (see POORTAR=lzma for default)]' \
+'*:archives:_files -g "*.(tar|TAR|z|bz2|bz|tbz2|tbz|gz|tgz|taz|dir|7z|t7z|lz|lzm|lzma|xz|tlz|txz|lrz|tlr|tlrz|lha|lzh|arj|arz|zip|jar|rar|Z|BZ2|BZ|TBZ2|TBZ|GZ|TGZ|TAZ|DIR|7Z|T7Z|LZ|LZM|LZMA|XZ|TLZ|TXZ|LRZ|TLR|TLRZ|LHA|LZH|ARJ|ARZ|ZIP|JAR|RAR)"'

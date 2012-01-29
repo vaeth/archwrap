@@ -1,0 +1,32 @@
+#! /usr/bin/env sh
+# This script is part of Martin Vaeth's archwrap project.
+
+Usage() {
+	printf '%s\n' \
+"Usage: ${0##*/} [option] [user@]host:destfile [ssh-options]
+Copies standard input via ssh to destfile on host. Filename must be sane.
+option:
+-a: Append the data to the file (i.e. do not delete old content)
+
+Example: tbzd -C -R - / | bar --size 4g | sshcat user@host:backup.tar.bz2
+Makes a compressed backup of the whole filesystem to a file
+on a remote host (assuming that the compressed file will be about
+4GB large and that you have the bar package - otherwise, you have to
+modify/omit the second part of the pipe, of course)."
+	exit ${1:-1}
+}
+
+redirect='>'
+OPTIND=1
+while getopts 'aHh?' opt
+do	case "${opt}" in
+	a)	redirect='>>';;
+	*)	Usage 0;;
+	esac
+done
+shift $(( ${OPTIND} - 1 ))
+desthost="${1%%:*}"
+destfile="${1##*:}"
+[ "${desthost}" = "$1" ] || [ -z "${destfile}" ] && Usage 1
+shift
+exec ssh "${@}" "${desthost}" "sh -c \"cat - ${redirect}'${destfile}'\""
