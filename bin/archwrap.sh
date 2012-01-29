@@ -128,5 +128,5 @@ PushTopack() {
 		test -r "${topacki}" && Push topack "${topacki}"
 	done
 	set -f
-	[ -n "${PushTopack}" ]
+	[ -n "${topack}" ]
 }

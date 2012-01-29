@@ -169,7 +169,7 @@ MainLoop() {
 	currdir="${PWD}"
 	cddone=false
 	for progargs
-	do	${cddone} && cd -- "${currdir}" >/dev/null
+	do	${cddone} && Cd "${currdir}"
 		cddone=false
 		pathname="${progargs}"
 		while [ "${pathname%/}" != "${pathname}" ]
@@ -523,7 +523,7 @@ zip)
 		unzip "${@}" -- "${f}"
 	;;
 	s*)	x='-l'
-		${verbose} && x='-v'
+		[ -n "${verbose}" ] && x='-v'
 		unzip ${x} -- "${f}"
 	;;
 	t*)	unzip -t -- "${f}"
@@ -587,7 +587,7 @@ rar)
 		unrar ${x} -- "${f}"
 	;;
 	s*)	x='l'
-		${verbose} && x='vt'
+		[ -n "${verbose}" ] && x='vt'
 		unrar ${x} -- "${f}"
 	;;
 	t*)	unrar t -- "${f}"

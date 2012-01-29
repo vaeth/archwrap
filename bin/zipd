@@ -18,7 +18,7 @@ options:
 -E: Break on error"
 	exit ${1:-1}
 }
-Push -c zipopts '-9 -r'
+Push -c zipopts '-9' '-r'
 symlink=false
 withparent=false
 dotparent=false
@@ -73,7 +73,7 @@ do	stat=0
 			Error ${stat} "not creating empty archive ${archive}"
 		}
 	fi
-	[ ${stat} -eq 0 ] && eval "zip \${zipopts} \"\${zipfile}\" ${topack}" \
+	[ ${stat} -eq 0 ] && eval "zip ${zipopts} \"\${zipfile}\" ${topack}" \
 		|| Error ${?} "Error when zipping ${name}"
 done
 
