@@ -58,7 +58,7 @@ do	stat=0
 	then	zipfile="${zipfile}.ZIP"
 	else	zipfile="${zipfile}.zip"
 	fi
-	if test -r "${ziparg}"
+	if test -r "${zipfile}"
 	then	Echo "removing old ${zipfile}"
 		rm -f -- "${zipfile}"
 	fi
