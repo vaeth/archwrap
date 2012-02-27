@@ -1,5 +1,5 @@
 #! /usr/bin/env sh
-# This script is part of Martin Vaeth's archwrap project.
+# This script is part of Martin V\"ath's archwrap project.
 
 . archwrap.sh || {
 	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
@@ -26,10 +26,12 @@ errbreak=false
 compat=false
 OPTIND=1
 while getopts 'FfdDkEhH?' opt
-do	case "${opt}" in
+do	case ${opt} in
 	F)	symlink=:;;
-	d)	withparent=:; dotparent=false;;
-	D)	withparent=:; dotparent=:;;
+	d)	withparent=:
+		dotparent=false;;
+	D)	withparent=:
+		dotparent=:;;
 	k)	compat=:;;
 	E)	errbreak=:;;
 	f)	symlink=false;;
@@ -42,11 +44,11 @@ shift $(( ${OPTIND} - 1 ))
 ${symlink} && Push zipopts '-y'
 ${compat}  && Push zipopts '-k'
 
-d="${PWD}"
+d=${PWD}
 for argu
 do	stat=0
-	name="${argu%.zip}"
-	name="${name%/}"
+	name=${argu%.zip}
+	name=${name%/}
 	Cd "${d}" || stat=${?}
 	if ! test -d "${name}"
 	then	Err 1 "Could not find Directory $name"

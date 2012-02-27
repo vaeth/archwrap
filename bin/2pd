@@ -1,5 +1,5 @@
 #! /usr/bin/env sh
-# This script is part of Martin Vaeth's archwrap project.
+# This script is part of Martin V\"ath's archwrap project.
 
 Fatal() {
 	printf '%s: %s\n' "${0##*/}" "${*}" >&2
@@ -35,8 +35,8 @@ renrcs=false
 withparent=''
 unpackx='-X'
 usetemp=:
-case "${0##*/}" in
-*ppd*) packopt='-A/RLW';;
+case ${0##*/} in
+*ppd*)	packopt='-A/RLW';;
 esac
 while [ ${#} -gt 0 ]
 do	case "${1}" in
@@ -70,7 +70,7 @@ then	chmod=chmod
 	${uall}   && chmodarg='go-rwx'
 fi
 
-currd="${PWD}" || Fatal "cannot determine current directory"
+currd=${PWD} || Fatal "cannot determine current directory"
 
 Cd() {
 	cd -- "${1}" >/dev/null 2>&1 || Fatal "cannot cd to ${1}"
@@ -79,9 +79,11 @@ Cd() {
 rmdirname=''
 Gosane() {
 	trap : EXIT HUP INT TERM
-	cd -- "${currd}" >/dev/null
-	[ -n "${rmdirname}" ] && test -d "${rmdirname}" && \
-		rm -rf -- "${rmdirname}" && rmdirname=''
+	[ -z "${rmdirname}" ] || {
+		cd -- "${currd}" >/dev/null \
+		&& test -d "${rmdirname}" \
+		&& rm -rf -- "${rmdirname}" && rmdirname=''
+	}
 	trap - EXIT HUP INT TERM
 }
 
@@ -89,40 +91,31 @@ for repack
 do	test -d "${repack}" || continue
 	repackp=`readlink -f -- "${repack}"` && [ -n "${repackp}" ] \
 		&& test -d "${repackp}" || Fatal "cannot resolve ${repack}"
-	repackp="${repack%/*}"
-	full="${repack##*/}"
-	blank="${full%.arz}"
-	blank="${blank%.arj}"
-	blank="${blank%.dir}"
-	blank="${blank%.zip}"
-	blank="${blank%.lha}"
-	blank="${blank%.lzh}"
-	blank="${blank%.Z}"
-	blank="${blank%.z}"
-	blank="${blank%.gz}"
-	blank="${blank%.bz}"
-	blank="${blank%.bz2}"
-	blank="${blank%.tgz}"
-	blank="${blank%.tbz}"
-	blank="${blank%.tbz2}"
-	blank="${blank%.7z}"
-	blank="${blank%.7za}"
-	blank="${blank%.lzma}"
-	blank="${blank%.xz}"
-	blank="${blank%.tlz}"
-	blank="${blank%.lrz}"
-	blank="${blank%.tlrz}"
-	blank="${blank%.tlr}"
-	blank="${blank%.txz}"
-	blank="${blank%.tar}"
+	repackp=${repack%/*}
+	full=${repack##*/}
+	blank=${full}
+	for bl in \
+		z bz2 bz tbz2 tbz gz tgz taz dir 7z t7z lz lzm lzma \
+		xz tlz txz lrz tlr tlrz lha lzh arj arz zip jar okular rar \
+		Z BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR 7Z T7Z LZ LZM LZMA \
+		XZ TLZ TXZ LRZ TLR TLRZ LHA LZH ARJ ARZ ZIP JAR OKULAR RAR
+	do	case ${blank} in
+		*.tar."${bl}"|*.TAR."${bl}")
+			blank=${blank%.*.*}
+			break;;
+		*."${bl}")
+			blank=${blank%.*}
+			break;;
+		esac
+	done
 	rmdirname=''
 	trap Gosane EXIT HUP INT TERM
 	if [ -n "${usetemp}" ]
 	then	rmdirname=`mktemp -d "/tmp/${0##*/}.XXXXXXXX"` \
 			&& [ -n "${rmdirname}" ] \
-			|| Fatal "cannot create temporary directory"
-		unpackp="${rmdirname}"
-	else	unpackp="${currd}"
+			|| Fatal 'cannot create temporary directory'
+		unpackp=${rmdirname}
+	else	unpackp=${currd}
 	fi
 	tempdirname="${unpackp}/${blank}"
 	test -r "${tempdirname}" && Fatal "${tempdirname} already exists"
@@ -133,7 +126,7 @@ do	test -d "${repack}" || continue
 	${chmod} -R -- "${chmodarg}" "${tempdirname}"
 	${renrcs} && ! test -r "${tempdirname}/RCS" \
 		&& mmv -r -- "${tempdirname}/;rcs" 'RCS'
-	tempsub="${tempdirname}"
+	tempsub=${tempdirname}
 	[ -n "${withparent}" ] && tempsub="${tempsub}/${blank}"
 	pd ${withparent} ${packopt} -- "${tempsub}" || \
 		Fatal "Packing ${tempsub} failed"

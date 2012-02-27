@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
-# This script is part of Martin Vaeth's archwrap project.
+# This script is part of Martin V\"ath's archwrap project.
 
-case "${0##*/}" in
+case ${0##*/} in
 *xz*)	xzmode=:;;
 *lz*)	xzmode=false;;
 *)	xzmode=:;;
@@ -9,7 +9,7 @@ esac
 
 CalcXz() {
 	xz_opt='--best'
-	m=`free|sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
+	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
 		&& [ -n "${m}" ] || return
 	[ "${m}" -gt 1800000 ] && return
 	if [ "${m}" -gt 950000 ]
@@ -23,19 +23,21 @@ CalcXz() {
 Remove() {
 	n=''
 	for i in ${xz_opt}
-	do	r="${i}"
+	do	r=${i}
 		for j
-		do	case "${i}" in
-			${j})	r=''; break;;
+		do	case ${i} in
+			${j})
+				r=''
+				break;;
 			esac
 		done
 		[ -z "${r}" ] && continue
-		[ -z "${n}" ] && n="${r}" || n="${n} ${r}"
+		[ -z "${n}" ] && n=${r} || n="${n} ${r}"
 	done
-	xz_opt="${n}"
+	xz_opt=${n}
 }
 
-xz_opt="${XZ_OPT}"
+xz_opt=${XZ_OPT}
 if [ -z "${xz_opt}" ]
 then	CalcXz
 else	Remove '--extreme'

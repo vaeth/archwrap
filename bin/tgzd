@@ -1,5 +1,5 @@
 #! /usr/bin/env sh
-# This script is part of Martin Vaeth's archwrap project.
+# This script is part of Martin V\"ath's archwrap project.
 
 . archwrap.sh || {
 	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
@@ -9,7 +9,7 @@
 set -f
 
 poortar=false
-case "${POORTAR}" in
+case ${POORTAR} in
 1|':'|[yYtT]*)
 	poortar=:
 ;;
@@ -60,7 +60,7 @@ secmode=false
 remote=''
 errbreak=false
 comp='g'
-case "${0##*/}" in
+case ${0##*/} in
 *lzma*|*.*lz*)
 	comp='l'
 	xnames=:
@@ -109,7 +109,7 @@ case "${0##*/}" in
 esac
 OPTIND=1
 while getopts 'F@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
-do	case "${opt}" in
+do	case ${opt} in
 	F)	follow=false;;
 	S)	use_star=:;;
 	T)	use_star=false;;
@@ -117,8 +117,10 @@ do	case "${opt}" in
 	C)	control=:;;
 	E)	errbreak=:;;
 	f)	follow=:;;
-	d)	withparent=:; dotparent=false;;
-	D)	withparent=:; dotparent=false;;
+	d)	withparent=:
+		dotparent=false;;
+	D)	withparent=:
+		dotparent=false;;
 	n)	ownernum='';;
 	t)	comp='';;
 	p)	poortar=:;;
@@ -132,8 +134,10 @@ do	case "${opt}" in
 	r)	comp="r";;
 	X)	xnames=:;;
 	x)	xnames=false;;
-	'@')	remote="r"; remotepath="${OPTARG}";;
-	R)	remote="R"; remotepath="${OPTARG}";;
+	'@')	remote="r"
+		remotepath=${OPTARG};;
+	R)	remote="R"
+		remotepath=${OPTARG};;
 	*)	Usage 0;;
 	esac
 done
@@ -142,7 +146,7 @@ shift $(( ${OPTIND} - 1 ))
 
 if [ -n "${remote}" ]
 then	export RSH
-	[ -n "${RSH}" ] || RSH="$(command -v ssh 2>/dev/null)"
+	[ -n "${RSH}" ] || RSH=`command -v ssh 2>/dev/null`
 fi
 
 Push -c taropts '-c' '-v'
@@ -215,7 +219,7 @@ Tarit() {
 	if [ -z "${remote}" ]
 	then	archive="${d}/${name}.${1}"
 		rm -f -- "${archive}"
-	elif [ "$remote" = "r" ]
+	elif [ "$remote" = 'r' ]
 	then	archive="${remotepath}${name}.${1}"
 	else	archive="${remotepath}"
 	fi
@@ -253,40 +257,43 @@ Tarit() {
 }
 
 MainLoop() {
-	d="${PWD}"
+	d=${PWD}
 	for progargs
-	do	dirname="${progargs}"
+	do	dirname=${progargs}
 		while [ "${dirname%/}" != "${dirname}" ]
-		do	dirname="${dirname%/}"
+		do	dirname=${dirname%/}
 		done
 		DoDir
 	done
 }
 
+StripDirname() {
+	for strip in taz tgz tbz dir tlz tlrz tlr
+	do	case ${dirname} in
+		*."${strip}")
+			dirname=${dirname%.*}
+			return;;
+		esac
+	done
+	for strip in z gz bz bz2 7z t7z lz lzm lzma lrz
+	do	case ${dirname} in
+		*.tar."${strip}")
+			dirname=${dirname%.*.*}
+			return;;
+		*."${strip}")
+			dirname=${dirname%.*}
+			return;;
+		esac
+	done
+}
+
 DoDir() {
-	dirname="${dirname%.z}"
-	dirname="${dirname%.gz}"
-	dirname="${dirname%.bz}"
-	dirname="${dirname%.bz2}"
-	dirname="${dirname%.taz}"
-	dirname="${dirname%.tgz}"
-	dirname="${dirname%.tbz}"
-	dirname="${dirname%.dir}"
-	dirname="${dirname%.7z}"
-	dirname="${dirname%.t7z}"
-	dirname="${dirname%.tlz}"
-	dirname="${dirname%.lz}"
-	dirname="${dirname%.lzm}"
-	dirname="${dirname%.lzma}"
-	dirname="${dirname%.lrz}"
-	dirname="${dirname%.tlrz}"
-	dirname="${dirname%.tlr}"
-	dirname="${dirname%.tar}"
+	StripDirname
 	if [ -z "${dirname}" ] || ! test -d "${dirname}"
 	then	Error 2 "could not find Directory ${dirname}"
 		return
 	fi
-	name="${dirname##*/}"
+	name=${dirname##*/}
 	[ -n "${name}" ] || name='_'
 	eval "set -- ${taropts}"
 	if ! ${poortar}

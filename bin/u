@@ -1,5 +1,5 @@
 #! /usr/bin/env sh
-# This script is part of Martin Vaeth's archwrap project.
+# This script is part of Martin V\"ath's archwrap project.
 
 . archwrap.sh || {
 	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
@@ -51,7 +51,7 @@ errbreak=false
 lower=false
 toname=''
 verbose=''
-case "${0##*/}" in
+case ${0##*/} in
 *ud*)
 	mdir=:
 ;;
@@ -61,14 +61,16 @@ case "${0##*/}" in
 esac
 OPTIND=1
 while getopts 'd2:STflvtjaXxcCnLpsPEhH?' opt
-do	case "${opt}" in
+do	case ${opt} in
 	d)	mdir=:;;
-	2)	mdir=:; toname="${OPTARG}";;
+	2)	mdir=:
+		toname=${OPTARG};;
 	S)	use_star=:;;
 	T)	use_star=false;;
 	f)	force=:;;
 	l)	show=:;;
-	v)	show=:; verbose="-v";;
+	v)	show=:
+		verbose='-v';;
 	t)	dotest=:;;
 	j)	junk=:;;
 	a)	preserve=false;;
@@ -96,7 +98,7 @@ then	mode='showing'
 else	mode='unpacking'
 fi
 
-case "${POORTAR:-no}" in
+case ${POORTAR:-no} in
 n*|N*|f*|F*|0)
 	verypoor=false
 	semipoor=false
@@ -137,7 +139,7 @@ else	tarprg='tar'
 	xzflag='-J'
 	if ${xzpoor}
 	then	lzmaflag='--lzma'
-	else	lzmaflag="${xzflag}"
+	else	lzmaflag=${xzflag}
 		Push taropts '--no-auto-compress'
 	fi
 	${ownernum} && Push taropts '--numeric-owner'
@@ -150,14 +152,14 @@ ${lower} && Push zipopts '-L'
 ${junk} && Push zipopts '-j'
 
 Getf() {
-	f="${1}"
+	f=${1}
 	test -f "${f}" && return
 	for i in '' .tar .TAR
 	do	for j in \
 			z bz2 bz tbz2 tbz gz tgz taz dir 7z t7z lz lzm lzma xz \
-			tlz txz lrz tlr tlrz lha lzh arj arz zip jar rar \
+			tlz txz lrz tlr tlrz lha lzh arj arz zip jar okular rar \
 			Z BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR 7Z T7Z LZ LZM LZMA XZ \
-			TLZ TXZ LRZ TLR TLRZ LHA LZH ARJ ARZ ZIP JAR RAR
+			TLZ TXZ LRZ TLR TLRZ LHA LZH ARJ ARZ ZIP JAR OKULAR RAR
 		do	f="${1}${i}.${j}"
 			test -f "${f}" && return
 		done
@@ -166,17 +168,17 @@ Getf() {
 }
 
 MainLoop() {
-	currdir="${PWD}"
+	currdir=${PWD}
 	cddone=false
 	for progargs
 	do	${cddone} && Cd "${currdir}"
 		cddone=false
-		pathname="${progargs}"
+		pathname=${progargs}
 		while [ "${pathname%/}" != "${pathname}" ]
-		do	pathname="${pathname%/}"
+		do	pathname=${pathname%/}
 		done
 		[ -z "${pathname}" ] && continue
-		case "${pathname}" in
+		case ${pathname} in
 		/*)	:;;
 		*)	pathname="${currdir}/${pathname}";;
 		esac
@@ -192,8 +194,8 @@ Cd() {
 
 IntoDir() {
 	${mdir} || return 0
-	d="${toname}"
-	[ -z "${d}" ] && d="${name##*/}"
+	d=${toname}
+	[ -z "${d}" ] && d=${name##*/}
 	if test -d "${d}"
 	then	if ! ${force}
 		then	Error 1 "Directory ${d} already exists (try -f)"
@@ -214,87 +216,88 @@ MyErrNot() {
 
 DoCases() {
 	full=false
-	name="${f%.*}"
-	case "${f##*/}" in
+	name=${f%.*}
+	case ${f##*/} in
 	*.tar|*.TAR)
 		typ=tar
 		full=:
 	;;
 	*.dir|*.taz|*.tgz|*.DIR|*.TAZ|*.TGZ)
-		typ="tar.gz"
+		typ='tar.gz'
 		full=:
 	;;
 	*.tbz|*.tbz2|*.TBZ|*.TBZ2)
-		typ="tar.bz2"
+		typ='tar.bz2'
 		full=:
 	;;
 	*.tlz|*.TLZ)
-		typ="tar.lzma"
+		typ='tar.lzma'
 		full=:
 	;;
 	*.txz|*.TXZ)
-		typ="tar.xz"
+		typ='tar.xz'
 		full=:
 	;;
 	*.tlr|*.tlrz|*.TLR|*.TLRZ)
-		typ="tar.lrz"
+		typ='tar.lrz'
 		full=:
 	;;
 	*.t7z|*.T7Z)
-		typ="tar.7z"
+		typ='tar.7z'
 		full=:
 	;;
 	*.gz|*.z|*.GZ|.Z)
-		typ="gz"
+		typ='gz'
 	;;
 	*.bz|*.bz2|*.BZ|*.BZ2)
-		typ="bz2"
+		typ='bz2'
 	;;
 	*.lm|*.lzm|*.lzma|*.LM|*.LZM|*.LZMA)
-		typ="lzma"
+		typ='lzma'
 	;;
 	*.xz|*.XZ)
-		typ="xz"
+		typ='xz'
 	;;
 	*.lrz|*.LRZ)
-		typ="lrz"
+		typ='lrz'
 	;;
 	*.7z|*.7z)
-		typ="7z"
+		typ='7z'
 	;;
-	*.zip|*.jar|*.ZIP|*.JAR)
-		typ="zip"
+	*.zip|*.jar|*.okular|*.ZIP|*.JAR|*.OKULAR)
+		typ='zip'
 		full=:
 	;;
 	*.arz|*.ARZ)
-		typ="arj.gz"
+		typ='arj.gz'
 		full=:
 	;;
 	*.arj|*.ARJ)
-		typ="arj"
+		typ='arj'
 	;;
 	*.lha|*.lzh|*.LHA|*.LZH)
-		typ="lha"
+		typ='lha'
 		full=:
 	;;
 	*.rar|*.RAR)
-		typ="rar"
+		typ='rar'
 		full=:
 	;;
-	*)	return 1
+	*)
+		return 1
 	;;
 	esac
 	if ! ${full}
-	then	case "${name}" in
+	then	case ${name} in
 		*.tar|*.TAR)
 			typ="tar.${typ}"
-			name="${name%.*}"
+			name=${name%.*}
 		;;
 		*.arj|*.ARJ)
-			case "${typ}" in
+			case ${typ} in
 			gz)
 				typ="arj.${typ}"
-				name="${name%.*}"
+				name=${name%.*}
 			;;
 			esac
 		;;
@@ -435,10 +438,8 @@ gz)
 	u*)	IntoDir || return
 		if ${mdir}
 		then	x="${name}.gz"
-			{
-				ln -s -- "${f}" "${x}" \
-				|| cp -a -- "${f}" "${x}"
-			} && gzip -d -N -f -- "${x}"
+			ln -s -- "${f}" "${x}" || cp -a -- "${f}" "${x}" \
+				&& gzip -d -N -f -- "${x}"
 		else	gzip -d -c -- "${f}" >"${x}"
 		fi
 	;;
@@ -453,10 +454,8 @@ bz2)
 	u*)	IntoDir || return
 		if ${mdir}
 		then	x="${name}.gz"
-			{
-				ln -s -- "${f}" "${x}" \
-				|| cp -a -- "${f}" "${x}"
-			} && bzip2 -d -- "${x}"
+			ln -s -- "${f}" "${x}" || cp -a -- "${f}" "${x}" \
+				&& bzip2 -d -- "${x}"
 		else	bzip2 -d -k -c -- "${f}" >"${name}"
 		fi
 	;;

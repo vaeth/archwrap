@@ -1,10 +1,14 @@
 #! /usr/bin/env sh
-# This script is part of Martin Vaeth's archwrap project.
+# This script is part of Martin V\"ath's archwrap project.
+
+. archwrap.sh || {
+	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
+	exit 2
+}
 
 Usage() {
-	printf '%s\n' \
-"Usage: ${0##*/} [option] [user@]host:destfile [ssh-options]
-Copies standard input via ssh to destfile on host. Filename must be sane.
+	Echo "Usage: ${0##*/} [option] [user@]host:destfile [ssh-options]
+Copies standard input via ssh to destfile on host.
 option:
 -a: Append the data to the file (i.e. do not delete old content)
 
@@ -19,14 +23,16 @@ modify/omit the second part of the pipe, of course)."
 redirect='>'
 OPTIND=1
 while getopts 'aHh?' opt
-do	case "${opt}" in
+do	case ${opt} in
 	a)	redirect='>>';;
 	*)	Usage 0;;
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
-desthost="${1%%:*}"
-destfile="${1##*:}"
-[ "${desthost}" = "$1" ] || [ -z "${destfile}" ] && Usage 1
+desthost=${1%%:*}
+destfile=${1#*:}
+[ "${desthost}" = "${1}" ] || [ -z "${destfile}" ] && Usage 1
 shift
-exec ssh "${@}" "${desthost}" "sh -c \"cat - ${redirect}'${destfile}'\""
+Push -c quotefile "${destfile}"
+Push -c quotecmd "cat - ${redirect}${quotefile}"
+exec ssh "${@}" "${desthost}" "sh -c ${quotecmd}"

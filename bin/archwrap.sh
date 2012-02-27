@@ -1,5 +1,5 @@
 #! /bin/sh
-# This script is part of Martin Vaeth's archwrap project.
+# This script is part of Martin V\"ath's archwrap project.
 # It provides shell functions for scripts like "tgzd" "zipd" "u"
 
 Echo() {
@@ -13,9 +13,9 @@ ErrMessage() {
 retvalue=0
 Error() {
 	e='. '
-	[ "${1}" -gt "${retvalue}" ] && retvalue="${1}"
+	[ "${1}" -gt "${retvalue}" ] && retvalue=${1}
 	shift
-	case "${*}" in
+	case ${*} in
 	*'.')	e=' ';;
 	*' '|*'
 ')	e='';;
@@ -56,12 +56,12 @@ MkTemp() {
 		return 2
 	fi
 	if [ -z "${have_random}" ]
-	then	r="${RANDOM}"
+	then	r=${RANDOM}
 		if [ "${r}" = "${RANDOM}" ] && \
 			[ "${r}" = "${RANDOM}" ]
 		then	have_random=false
 			r=`od -d -N2 /dev/random 2>/dev/null` || r=''
-			r=`echo ${r}`; r="${r#* }"; r="${r% *}"
+			r=`printf '%s' ${r}`
 			if [ -z "${r}" ]
 			then	r=1
 			else	r=$(( ${r} % 32768 ))
@@ -75,7 +75,7 @@ MkTemp() {
 	while [ ${c} -le 999 ]
 	do	if [ -n "${t}" ]
 		then	if ${have_random}
-			then	r="${RANDOM}"
+			then	r=${RANDOM}
 			else	r=$(( ${r} * 13821 ))
 				r=$(( ${r} % 32768 ))
 			fi
@@ -84,7 +84,7 @@ MkTemp() {
 		(
 			set -C
 			: >"${t}"
-		) && tempname="${t}" && return
+		) && tempname=${t} && return
 		c=$(( ${c} + 1 ))
 	done
 	ErrMessage 'cannot create temporary file'
@@ -92,22 +92,22 @@ MkTemp() {
 }
 
 Push() {
-	case "${1}" in
+	case ${1} in
 	-*)	shift
 		eval "${1}=''";;
 	esac
-	PushD_="${1}"
+	PushD_=${1}
 	shift
 	eval "for PushA_
 	do	[ -z \"\${${PushD_}}\" ] && ${PushD_}=\\' \
 			|| ${PushD_}=\"\${${PushD_}} '\"
-		PushB_=\"\${PushA_}\"
+		PushB_=\${PushA_}
 		while {
-			PushC_=\"\${PushB_%%\\'*}\"
+			PushC_=\${PushB_%%\\'*}
 			[ \"\${PushC_}\" != \"\${PushB_}\" ]
 		}
 		do	${PushD_}=\"\${${PushD_}}\${PushC_}'\\\\''\"
-			PushB_=\"\${PushB_#*\\'}\"
+			PushB_=\${PushB_#*\\'}
 		done
 		${PushD_}=\"\${${PushD_}}\${PushB_}'\"
 	done"
@@ -122,7 +122,7 @@ PushTopack() {
 	Push -c topack
 	set +f
 	for topacki in .* *
-	do	case "${topacki}" in
+	do	case ${topacki} in
 		.|..)	continue;;
 		esac
 		test -r "${topacki}" && Push topack "${topacki}"
