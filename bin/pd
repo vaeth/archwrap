@@ -138,9 +138,9 @@ Errunp() {
 	Error 2 "Error when calling $1 to create $2"
 }
 
-eval 'Remove() {
+eval "Remove() {
 	${showonly} rm -- \"\${@}\"
-}'
+}"
 
 # The function Compare expects ${namea} and ${nameb} to be set to the filenames
 # to be compared. It will then delete the larger file (length modulo $modulo),
@@ -238,15 +238,18 @@ Dopack() {
 	nameb="${destname}.${txzapp}"
 	if ${txznow}
 	then	Echo "Creating ${nameb}"
-		lzma --best -k -c -- "${destname}.tar" >"${nameb}" \
+		xzbest -k -c -- "${destname}.tar" >"${nameb}" \
 			|| Errunp 'lzma' "${nameb}"
 	fi
 	Compare
 	nameb="${destname}.${lrzapp}"
 	if ${lrznow}
 	then	Echo "Creating ${nameb}"
-		lrzip -L 9 -o "${nameb}" -- "${destname}.tar" \
-			|| Errunp 'lrzip' "${nameb}"
+		namex="${destname}.tar.lrz"
+		lrzip -L 9 -o "${namex}" -- "${destname}.tar" && {
+			[ "${namex}" = "${nameb}" ] || \
+				mv -- "${namex}" "${nameb}"
+		} || Errunp 'lrzip' "${nameb}"
 	fi
 	Compare
 	! ${withtar} && ${tarnow} && Remove "${destname}.tar"
