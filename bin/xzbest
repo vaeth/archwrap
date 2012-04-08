@@ -21,13 +21,13 @@ CalcXz() {
 }
 
 Remove() {
-	n=''
+	n=
 	for i in ${xz_opt}
 	do	r=${i}
 		for j
 		do	case ${i} in
 			${j})
-				r=''
+				r=
 				break;;
 			esac
 		done

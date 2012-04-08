@@ -10,7 +10,7 @@ set -f
 
 poortar=false
 case ${POORTAR} in
-1|':'|[yYtT]*)
+[yYtT1:]*)
 	poortar=:
 ;;
 esac
@@ -57,7 +57,7 @@ xnames=false
 ownernum=:
 sparse=:
 secmode=false
-remote=''
+remote=
 errbreak=false
 comp='g'
 case ${0##*/} in
@@ -104,7 +104,7 @@ case ${0##*/} in
 	comp='r'
 ;;
 *tar*)
-	comp=''
+	comp=
 ;;
 esac
 OPTIND=1
@@ -121,11 +121,11 @@ do	case ${opt} in
 		dotparent=false;;
 	D)	withparent=:
 		dotparent=false;;
-	n)	ownernum='';;
-	t)	comp='';;
+	n)	ownernum=;;
+	t)	comp=;;
 	p)	poortar=:;;
 	P)	poortar=false;;
-	s)	sparse='';;
+	s)	sparse=;;
 	b)	comp="b";;
 	g)	comp="g";;
 	l|z|m)	comp="l";;

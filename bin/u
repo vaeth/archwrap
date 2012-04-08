@@ -49,8 +49,8 @@ use_acl=false
 caremode=false
 errbreak=false
 lower=false
-toname=''
-verbose=''
+toname=
+verbose=
 case ${0##*/} in
 *ud*)
 	mdir=:
@@ -424,8 +424,7 @@ tar.7z)
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
-		7za -so e -- "$fN" | \
-			"${tarprg}" -x -v "${@}" -f -
+		7za -so e -- "${f}" | "${tarprg}" -x -v "${@}" -f -
 	;;
 	s*)	7za -so e -- "${f}" | "${tarprg}" -t ${verbose} -f -
 	;;
@@ -517,8 +516,8 @@ lrz)
 zip)
 	case ${mode} in
 	u*)	IntoDir || return
-		x=''
-		eval "set -- ${zipopts}"
+		x=
+		eval set -- ${zipopts}
 		unzip "${@}" -- "${f}"
 	;;
 	s*)	x='-l'

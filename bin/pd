@@ -42,15 +42,15 @@ svzapp='t7z'
 lzmapp='tlz'
 txzapp='txz'
 lrzapp='tlr'
-showonly=''
+showonly=
 preserv=false
 modulo=512
 linksresolve='-F'
-withparent=''
-plainowner=''
-nostar=''
-control=''
-secmode=''
+withparent=
+plainowner=
+nostar=
+control=
+secmode=
 errbreak=false
 
 Selectall() {
@@ -118,9 +118,9 @@ do	case ${opt} in
 	W)	withtxz=false;;
 	R)	withlrz=false;;
 	p)	preserv=:;;
-	F)	linksresolve='';;
+	F)	linksresolve=;;
 	f)	linksresolve='-f';;
-	0)	modulo='';;
+	0)	modulo=;;
 	5)	modulo=512;;
 	1)	modulo=1024;;
 	2)	modulo=2048;;

@@ -27,12 +27,12 @@ All other options are passed to pd"
 	exit ${1:-1}
 }
 
-unpackl=''
+unpackl=
 uall=false
 uread=false
 uwrite=false
 renrcs=false
-withparent=''
+withparent=
 unpackx='-X'
 usetemp=:
 case ${0##*/} in
@@ -43,7 +43,7 @@ do	case "${1}" in
 	--[hH]*|-h|'-?')
 		Usage 0;;
 	-L)	unpackl='-L';;
-	-x)	unpackx='';;
+	-x)	unpackx=;;
 	-u|-ua)	uall=:;;
 	-ur)	uread=:;;
 	-uw)	uwrite=:;;
@@ -76,13 +76,13 @@ Cd() {
 	cd -- "${1}" >/dev/null 2>&1 || Fatal "cannot cd to ${1}"
 }
 
-rmdirname=''
+rmdirname=
 Gosane() {
 	trap : EXIT HUP INT TERM
 	[ -z "${rmdirname}" ] || {
 		cd -- "${currd}" >/dev/null \
 		&& test -d "${rmdirname}" \
-		&& rm -rf -- "${rmdirname}" && rmdirname=''
+		&& rm -rf -- "${rmdirname}" && rmdirname=
 	}
 	trap - EXIT HUP INT TERM
 }
@@ -108,7 +108,7 @@ do	test -d "${repack}" || continue
 			break;;
 		esac
 	done
-	rmdirname=''
+	rmdirname=
 	trap Gosane EXIT HUP INT TERM
 	if [ -n "${usetemp}" ]
 	then	rmdirname=`mktemp -d "/tmp/${0##*/}.XXXXXXXX"` \

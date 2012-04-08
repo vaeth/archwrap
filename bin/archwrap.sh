@@ -18,7 +18,7 @@ Error() {
 	case ${*} in
 	*'.')	e=' ';;
 	*' '|*'
-')	e='';;
+')	e=;;
 	esac
 	if ${errbreak}
 	then	ErrMessage "${*}${e}Stopped."
@@ -34,11 +34,11 @@ Exit() {
 	exit ${retvalue}
 }
 
-tempname=''
+tempname=
 RmTemp() {
 	trap : EXIT HUP INT TERM
 	[ -n "${tempname}" ] && rm -f -- "${tempname}"
-	tempname=''
+	tempname=
 	trap - EXIT HUP INT TERM
 }
 
@@ -60,7 +60,7 @@ MkTemp() {
 		if [ "${r}" = "${RANDOM}" ] && \
 			[ "${r}" = "${RANDOM}" ]
 		then	have_random=false
-			r=`od -d -N2 /dev/random 2>/dev/null` || r=''
+			r=`od -d -N2 /dev/random 2>/dev/null` || r=
 			r=`printf '%s' ${r}`
 			if [ -z "${r}" ]
 			then	r=1
@@ -69,7 +69,7 @@ MkTemp() {
 			fi
 		else	have_random=:
 		fi
-		t=''
+		t=
 	fi
 	c=0
 	while [ ${c} -le 999 ]
@@ -94,7 +94,7 @@ MkTemp() {
 Push() {
 	case ${1} in
 	-*)	shift
-		eval "${1}=''";;
+		eval ${1}=;;
 	esac
 	PushD_=${1}
 	shift
