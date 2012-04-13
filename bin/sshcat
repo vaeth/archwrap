@@ -22,7 +22,7 @@ modify/omit the second part of the pipe, of course)."
 
 redirect='>'
 OPTIND=1
-while getopts 'aHh?' opt
+while getopts 'ahH?' opt
 do	case ${opt} in
 	a)	redirect='>>';;
 	*)	Usage 0;;

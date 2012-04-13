@@ -1,14 +1,17 @@
 #! /usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 
+Echo() {
+	printf '%s\n' "${*}"
+}
+
 Fatal() {
-	printf '%s: %s\n' "${0##*/}" "${*}" >&2
+	Echo "${0##*/}: ${*}" >&2
 	exit 2
 }
 
 Usage() {
-	printf '%s\n' \
-"Usage: ${0##*/} [option] ... [option] archive archive ...
+	Echo "Usage: ${0##*/} [option] ... [option] archive archive ...
 Repack archives.
 Option is one of the following:
 -tmp   Use current directory instead of /tmp for tempdirectory
@@ -39,7 +42,7 @@ case ${0##*/} in
 *ppd*)	packopt='-A/RLW';;
 esac
 while [ ${#} -gt 0 ]
-do	case "${1}" in
+do	case ${1} in
 	--[hH]*|-h|'-?')
 		Usage 0;;
 	-L)	unpackl='-L';;

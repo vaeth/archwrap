@@ -7,7 +7,7 @@ Echo() {
 }
 
 ErrMessage() {
-	printf '%s: %s\n' "${0##*/}" "${*}" >&2
+	Echo "${0##*/}: ${*}" >&2
 }
 
 retvalue=0
