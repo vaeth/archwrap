@@ -7,6 +7,13 @@ case ${0##*/} in
 *)	xzmode=:;;
 esac
 
+which=`command -v which` || which=
+MakeExternal() {
+	[ "${which}" = 'which' ] && eval ${1}=\`which ${2}\` \
+		|| eval ${1}=\`command -v ${2}\` || eval ${1}=
+	eval ": \${${1}:=${2}}"
+}
+
 CalcXz() {
 	xz_opt='--best'
 	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
@@ -44,6 +51,7 @@ else	Remove '--extreme'
 fi
 export XZ_OPT='--extreme'
 if ${xzmode}
-then	exec xz ${xz_opt} "${@}"
-else	exec lzma ${xz_opt} "${@}"
+then	MakeExternal l xz
+else	MakeExternal l lzma
 fi
+exec "${l}" ${xz_opt} "${@}"

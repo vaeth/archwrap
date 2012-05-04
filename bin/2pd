@@ -73,17 +73,24 @@ then	chmod=chmod
 	${uall}   && chmodarg='go-rwx'
 fi
 
-currd=${PWD} || Fatal "cannot determine current directory"
+currd=${PWD} || currd=
+case ${currd} in
+/*)	:;;
+*)	Fatal "cannot determine current directory"
+esac
 
 Cd() {
-	cd -- "${1}" >/dev/null 2>&1 || Fatal "cannot cd to ${1}"
+	case ${1} in
+	/*)	cd "${1}" >/dev/null 2>&1 || Fatal "cd ${1} failed";;
+	*)	cd "./${1#./}" >/dev/null 2>&1 || Fatal "cd ${PWD}/${1#./} failed";;
+	esac
 }
 
 rmdirname=
 Gosane() {
 	trap : EXIT HUP INT TERM
 	[ -z "${rmdirname}" ] || {
-		cd -- "${currd}" >/dev/null \
+		cd "${currd}" >/dev/null \
 		&& test -d "${rmdirname}" \
 		&& rm -rf -- "${rmdirname}" && rmdirname=
 	}
@@ -125,7 +132,7 @@ do	test -d "${repack}" || continue
 	Cd "${unpackp}"
 	u -d ${unpackx} ${unpackl} -- "${repackp}/${full}" || \
 		Fatal "cannot unpack ${repackp}/${full}"
-	Cd "${repackp}" >/dev/null
+	Cd "${repackp}"
 	${chmod} -R -- "${chmodarg}" "${tempdirname}"
 	${renrcs} && ! test -r "${tempdirname}/RCS" \
 		&& mmv -r -- "${tempdirname}/;rcs" 'RCS'

@@ -1,10 +1,7 @@
 #! /usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 
-. archwrap.sh || {
-	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
-	exit 2
-}
+. archwrap.sh
 
 Usage() {
 	Echo "Usage: ${0##*/} [option] [path/]zipdir[/]
@@ -44,6 +41,8 @@ shift $(( ${OPTIND} - 1 ))
 ${symlink} && Push zipopts '-y'
 ${compat}  && Push zipopts '-k'
 
+MakeExternal zip zip
+
 d=${PWD}
 for argu
 do	stat=0
@@ -75,7 +74,8 @@ do	stat=0
 			Error ${stat} "not creating empty archive ${archive}"
 		}
 	fi
-	[ ${stat} -eq 0 ] && eval "zip ${zipopts} \"\${zipfile}\" ${topack}" \
+	[ ${stat} -eq 0 ] && \
+		eval "\"\${zip}\" ${zipopts} \"\${zipfile}\" ${topack}" \
 		|| Error ${?} "Error when zipping ${name}"
 done
 

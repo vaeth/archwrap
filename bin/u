@@ -1,10 +1,7 @@
 #! /usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 
-. archwrap.sh || {
-	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
-	exit 2
-}
+. archwrap.sh
 
 set -f
 
@@ -52,12 +49,8 @@ lower=false
 toname=
 verbose=
 case ${0##*/} in
-*ud*)
-	mdir=:
-;;
-*uv*)
-	show=:
-;;
+*ud*)	mdir=:;;
+*uv*)	show=:;;
 esac
 OPTIND=1
 while getopts 'd2:STflvtjaXxcCnLpsPEhH?' opt
@@ -99,23 +92,19 @@ else	mode='unpacking'
 fi
 
 case ${POORTAR:-no} in
-n*|N*|f*|F*|0)
+[nNfF0]*)
 	verypoor=false
 	semipoor=false
-	xzpoor=false
-;;
-l*|L*)
+	xzpoor=false;;
+[lL]*)
 	verypoor=false
 	semipoor=false
-	xzpoor=:
-;;
-s*|S*)
+	xzpoor=:;;
+[sS]*)
 	verypoor=false
-	semipoor=:
-;;
+	semipoor=:;;
 *)
-	verypoor=:
-;;
+	verypoor=:;;
 esac
 ${verypoor} && semipoor=:
 ${semipoor} && xzpoor=:
@@ -133,7 +122,7 @@ then	tarprg='star'
 	if ! ${caremode}
 	then	star -c -no-fsync >/dev/null 2>&1 && Push taropts '-no-fsync'
 	fi
-else	tarprg='tar'
+else	MakeExternal tarprg tar
 	gzipflag='-z'
 	bzipflag='-j'
 	xzflag='-J'
@@ -187,11 +176,7 @@ MainLoop() {
 	done
 }
 
-Cd() {
-	cddone=:
-	cd -- "${1}" >/dev/null 2>&1 || Error 2 "cd ${1} failed"
-}
-
+umask=
 IntoDir() {
 	${mdir} || return 0
 	d=${toname}
@@ -201,9 +186,11 @@ IntoDir() {
 		then	Error 1 "Directory ${d} already exists (try -f)"
 			return 1
 		fi
-	else	mkdir -- "${d}" >/dev/null
+	else	[ -n "${umask}" ] || umask=`umask -S`
+		mkdir -m "${umask}" -- "${d}" >/dev/null
 	fi
 	Cd "${d}"
+	cddone=:
 }
 
 MyErr() {
@@ -220,378 +207,303 @@ DoCases() {
 	case ${f##*/} in
 	*.tar|*.TAR)
 		typ=tar
-		full=:
-	;;
+		full=:;;
 	*.dir|*.taz|*.tgz|*.DIR|*.TAZ|*.TGZ)
 		typ='tar.gz'
-		full=:
-	;;
+		full=:;;
 	*.tbz|*.tbz2|*.TBZ|*.TBZ2)
 		typ='tar.bz2'
-		full=:
-	;;
+		full=:;;
 	*.tlz|*.TLZ)
 		typ='tar.lzma'
-		full=:
-	;;
+		full=:;;
 	*.txz|*.TXZ)
 		typ='tar.xz'
-		full=:
-	;;
+		full=:;;
 	*.tlr|*.tlrz|*.TLR|*.TLRZ)
 		typ='tar.lrz'
-		full=:
-	;;
+		full=:;;
 	*.t7z|*.T7Z)
 		typ='tar.7z'
-		full=:
-	;;
+		full=:;;
 	*.gz|*.z|*.GZ|.Z)
-		typ='gz'
-	;;
+		typ='gz';;
 	*.bz|*.bz2|*.BZ|*.BZ2)
-		typ='bz2'
-	;;
+		typ='bz2';;
 	*.lm|*.lzm|*.lzma|*.LM|*.LZM|*.LZMA)
-		typ='lzma'
-	;;
+		typ='lzma';;
 	*.xz|*.XZ)
-		typ='xz'
-	;;
+		typ='xz';;
 	*.lrz|*.LRZ)
-		typ='lrz'
-	;;
+		typ='lrz';;
 	*.7z|*.7z)
-		typ='7z'
-	;;
+		typ='7z';;
 	*.zip|*.jar|*.okular|*.ZIP|*.JAR|*.OKULAR)
 		typ='zip'
-		full=:
-	;;
+		full=:;;
 	*.arz|*.ARZ)
 		typ='arj.gz'
-		full=:
-	;;
+		full=:;;
 	*.arj|*.ARJ)
-		typ='arj'
-	;;
+		typ='arj';;
 	*.lha|*.lzh|*.LHA|*.LZH)
 		typ='lha'
-		full=:
-	;;
+		full=:;;
 	*.rar|*.RAR)
 		typ='rar'
-		full=:
-	;;
+		full=:;;
 	*)
-		return 1
-	;;
+		return 1;;
 	esac
 	if ! ${full}
 	then	case ${name} in
 		*.tar|*.TAR)
 			typ="tar.${typ}"
-			name=${name%.*}
-		;;
+			name=${name%.*};;
 		*.arj|*.ARJ)
 			case ${typ} in
 			gz)
 				typ="arj.${typ}"
-				name=${name%.*}
-			;;
-			esac
-		;;
+				name=${name%.*};;
+			esac;;
 		esac
 	fi
 	DoIt
 	return 0
 }
 
+unset bzip gzip lzma xz lrzip za unzip unarj lha unrar
 DoIt() {
 	case ${typ} in
 tar)
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
-		"${tarprg}" -x -v "${@}" -f "${f}" || MyErr
-	;;
-	s*)	"${tarprg}" -t ${verbose} -f "${f}" || MyErr
-	;;
-	t*)	MyErrNot
-	;;
-	esac
-;;
+		"${tarprg}" -x -v "${@}" -f "${f}" || MyErr;;
+	s*)	"${tarprg}" -t ${verbose} -f "${f}" || MyErr;;
+	t*)	MyErrNot;;
+	esac;;
 tar.gz)
+	OptExternal gzip
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
 		if ${verypoor}
-		then	gzip -d -c -- "${f}" | \
+		then	"${gzip}" -d -c -- "${f}" | \
 				"${tarprg}" -x -v "${@}" -f -
 		else	"${tarprg}" -x -v ${gzipflag} "${@}" -f "${f}"
-		fi
-	;;
+		fi;;
 	s*)	if ${verypoor}
-		then	gzip -d -c -- "${f}" | "${tarprg}" -t ${verbose} -f -
+		then	"${gzip}" -d -c -- "${f}" | "${tarprg}" -t ${verbose} -f -
 		else	"${tarprg}" -t ${verbose} ${gzipflag} -f "${f}"
-		fi
-	;;
-	t*)	gzip -t -v -- "${f}"
-	;;
-	esac || MyErr
-;;
+		fi;;
+	t*)	"${gzip}" -t -v -- "${f}";;
+	esac || MyErr;;
 tar.bz2)
+	OptExternal bzip bzip2
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
 		if ${verypoor}
-		then	bzip2 -d -k -c -- "${f}" | \
+		then	"${bzip}" -d -k -c -- "${f}" | \
 				"${tarprg}" -x -v "${@}" -f -
 		else	"${tarprg}" -x -v ${bzipflag} "${@}" -f "${f}"
-		fi
-	;;
+		fi;;
 	s*)	if ${verypoor}
-		then	bzip2 -d -k -c -- "${f}" | \
+		then	"${bzip}" -d -k -c -- "${f}" | \
 				"${tarprg}" -t ${verbose} -f -
 		else	"${tarprg}" -t ${verbose} ${bzipflag} -f "${f}"
-		fi
-	;;
-	t*)	bzip2 -t -v -- "${f}"
-	;;
-	esac || MyErr
-;;
+		fi;;
+	t*)	"${bzip}" -t -v -- "${f}";;
+	esac || MyErr;;
 tar.lzma)
+	OptExternal lzma
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
 		if ${semipoor}
-		then	lzma -d -k -c -- "${f}" | \
+		then	"${lzma}" -d -k -c -- "${f}" | \
 				"${tarprg}" -x -v "${@}" -f -
 		else	"${tarprg}" -x -v ${lzmaflag} "${@}" -f "${f}"
-		fi
-	;;
+		fi;;
 	s*)	if ${semipoor}
-		then	lzma -d -k -c -- "${f}" | \
+		then	"${lzma}" -d -k -c -- "${f}" | \
 				"${tarprg}" -t ${verbose} -f -
 		else	"${tarprg}" -t ${verbose} ${lzmaflag} -f "${f}"
-		fi
-	;;
-	t*)	lzma -t -v -- "${f}"
-	;;
-	esac || MyErr
-;;
+		fi;;
+	t*)	"${lzma}" -t -v -- "${f}";;
+	esac || MyErr;;
 tar.xz)
+	OptExternal xz
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
 		if ${xzpoor}
-		then	xz -d -k -c -- "${f}" | \
+		then	"${xz}" -d -k -c -- "${f}" | \
 				"${tarprg}" -x -v "${@}" -f -
 		else	"${tarprg}" -x -v ${xzflag} "${@}" -f "${f}"
-		fi
-	;;
+		fi;;
 	s*)	if ${xzpoor}
-		then	xz -d -k -c -- "${f}" | \
+		then	"${xz}" -d -k -c -- "${f}" | \
 				"${tarprg}" -t ${verbose} -f -
 		else	"${tarprg}" -t ${verbose} ${xzflag} -f "${f}"
-		fi
-	;;
-	t*)	xz -t -v -- "${f}"
-	;;
-	esac || MyErr
-;;
+		fi;;
+	t*)	"${xz}" -t -v -- "${f}";;
+	esac || MyErr;;
 tar.lrz)
+	OptExternal lrzip
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
 		MkTemp && \
-			lrzip -d -o "${tempname}" -- "${f}" && \
+			"${lrzip}" -d -o "${tempname}" -- "${f}" && \
 			"${tarprg}" -x -v "${@}" -f "${tempname}" && \
 			RmTemp \
-			|| MyErr
-	;;
+			|| MyErr;;
 	s*)	MkTemp && \
-			lrzip -d -o "${tempname}" -- "${f}" && \
+			"${lrzip}" -d -o "${tempname}" -- "${f}" && \
 			"${tarprg}" -t ${verbose} -f "${tempname}" && \
 			RmTemp \
-			|| MyErr
-	;;
-	t*)	MyErrNot
-	;;
-	esac
-;;
+			|| MyErr;;
+	t*)	MyErrNot;;
+	esac;;
 tar.7z)
+	OptExternal za 7za
 	case ${mode} in
 	u*)	IntoDir || return
 		eval "set -- ${taropts}"
-		7za -so e -- "${f}" | "${tarprg}" -x -v "${@}" -f -
-	;;
-	s*)	7za -so e -- "${f}" | "${tarprg}" -t ${verbose} -f -
-	;;
-	t*)	7za t -- "${f}"
-	;;
-	esac || MyErr
-;;
+		"${za}" -so e -- "${f}" | "${tarprg}" -x -v "${@}" -f -;;
+	s*)	"${za}" -so e -- "${f}" | "${tarprg}" -t ${verbose} -f -;;
+	t*)	"${za}" t -- "${f}";;
+	esac || MyErr;;
 gz)
+	OptExternal gzip
 	case ${mode} in
 	u*)	IntoDir || return
 		if ${mdir}
 		then	x="${name}.gz"
 			ln -s -- "${f}" "${x}" || cp -a -- "${f}" "${x}" \
-				&& gzip -d -N -f -- "${x}"
-		else	gzip -d -c -- "${f}" >"${name}"
-		fi
-	;;
-	s*)	gzip -l -v -- "${f}"
-	;;
-	t*)	gzip -t -v -- "${f}"
-	;;
-	esac || MyErr
-;;
+				&& "${gzip}" -d -N -f -- "${x}"
+		else	"${gzip}" -d -c -- "${f}" >"${name}"
+		fi;;
+	s*)	"${gzip}" -l -v -- "${f}";;
+	t*)	"${gzip}" -t -v -- "${f}";;
+	esac || MyErr;;
 bz2)
+	OptExternal bzip bzip2
 	case ${mode} in
 	u*)	IntoDir || return
 		if ${mdir}
 		then	x="${name}.gz"
 			ln -s -- "${f}" "${x}" || cp -a -- "${f}" "${x}" \
-				&& bzip2 -d -- "${x}"
-		else	bzip2 -d -k -c -- "${f}" >"${name}"
-		fi
-	;;
-	s*)	bzip2 -l -v -- "${f}"
-	;;
-	t*)	bzip2 -t -v -- "${f}"
-	;;
-	esac || MyErr
-;;
+				&& "${bzip}" -d -- "${x}"
+		else	"${bzip}" -d -k -c -- "${f}" >"${name}"
+		fi;;
+	s*)	"${bzip}" -l -v -- "${f}";;
+	t*)	"${bzip}" -t -v -- "${f}";;
+	esac || MyErr;;
 lzma)
+	OptExternal lzma
 	case ${mode} in
 	u*)	IntoDir || return
-		lzma -d -k -v -- "${f}" || MyErr
-	;;
-	s*)	MyErrNot
-	;;
-	t*)	lzma -t -v -- "${f}" || MyErr
-	;;
-	esac
-;;
+		"${lzma}" -d -k -v -- "${f}" || MyErr;;
+	s*)	MyErrNot;;
+	t*)	"${lzma}" -t -v -- "${f}" || MyErr;;
+	esac;;
 xz)
+	OptExternal xz
 	case ${mode} in
 	u*)	IntoDir || return
-		xz -d -k -v -- "${f}" || MyErr
-	;;
-	s*)	MyErrNot
-	;;
-	t*)	xz -t -v -- "${f}" || MyErr
-	;;
-	esac
-;;
+		"${xz}" -d -k -v -- "${f}" || MyErr;;
+	s*)	MyErrNot;;
+	t*)	"${xz}" -t -v -- "${f}" || MyErr;;
+	esac;;
 lrz)
+	OptExternal lrzip
 	case ${mode} in
 	u*)	IntoDir || return
 		if ${mdir}
-		then	lrzip -d -- "${f}"
-		else	bzip2 -d -o "${name}" -- "${f}"
-		fi || MyErr
-	;;
-	s*)	MyErrNot
-	;;
-	t*)	MyErrNot
-	;;
-	esac
-;;
+		then	"${lrzip}" -d -- "${f}"
+		else	"${lrzip}" -d -o "${name}" -- "${f}"
+		fi || MyErr;;
+	s*)	MyErrNot;;
+	t*)	MyErrNot;;
+	esac;;
 7z)
+	OptExternal za 7za
 	case ${mode} in
 	u*)	IntoDir || return
 		x='x'
 		${junk} && x='e'
-		7za ${x} -- "${f}"
-	;;
-	s*)	7za l -- "${f}"
-	;;
-	t*)	7za t -- "${f}"
-	;;
-	esac || MyErr
-;;
+		"${za}" ${x} -- "${f}";;
+	s*)	"${za}" l -- "${f}";;
+	t*)	"${za}" t -- "${f}";;
+	esac || MyErr;;
 zip)
+	OptExternal unzip
 	case ${mode} in
 	u*)	IntoDir || return
 		x=
 		eval set -- ${zipopts}
-		unzip "${@}" -- "${f}"
-	;;
+		"${unzip}" "${@}" -- "${f}";;
 	s*)	x='-l'
 		[ -n "${verbose}" ] && x='-v'
-		unzip ${x} -- "${f}"
-	;;
-	t*)	unzip -t -- "${f}"
-	;;
-	esac || MyErr
-;;
+		"${unzip}" ${x} -- "${f}";;
+	t*)	"${unzip}" -t -- "${f}";;
+	esac || MyErr;;
 arj)
+	OptExternal unarj
 	case ${mode} in
 	u*)	IntoDir || return
 		x='x'
 		${junk} && x='e'
-		unarj ${x} -- "${f}"
-	;;
-	s*)	unarj l -- "${f}"
-	;;
-	t*)	unarj t -- "${f}"
-	;;
-	esac || MyErr
-;;
+		"${unarj}" ${x} -- "${f}";;
+	s*)	"${unarj}" l -- "${f}";;
+	t*)	"${unarj}" t -- "${f}";;
+	esac || MyErr;;
 arj.gz)
+	OptExternal unarj
+	OptExternal gzip
 	case ${mode} in
 	u*)	IntoDir || return
 		x='x'
 		${junk} && x='e'
 		MkTemp && \
-			gzip -d -c -- "${f}" >"${tempname}" && \
-			unarj ${x} -- "${tempname}" && \
-			RmTemp
-	;;
+			"${gzip}" -d -c -- "${f}" >"${tempname}" && \
+			"${unarj}" ${x} -- "${tempname}" && \
+			RmTemp;;
 	s*)	MkTemp && \
-			gzip -d -c -- "${f}" >"${tempname}" && \
-			unarj l -- "${tempname}" && \
-			RmTemp
-	;;
-	t*)	gzip -t -v -- "${f}" &&
+			"${gzip}" -d -c -- "${f}" >"${tempname}" && \
+			"${unarj}" l -- "${tempname}" && \
+			RmTemp;;
+	t*)	"${gzip}" -t -v -- "${f}" &&
 			MkTemp && \
-			gzip -d -c -v -- "${f}" >"${tempname}" && \
-			unarj t -- "${tempname}" && \
-			RmTemp
-	;;
-	esac || MyErr
-;;
+			"${gzip}" -d -c -v -- "${f}" >"${tempname}" && \
+			"${unarj}" t -- "${tempname}" && \
+			RmTemp;;
+	esac || MyErr;;
 lha)
+	OptExternal lha
 	case ${mode} in
 	u*)	IntoDir || return
 		x='-x'
 		${junk} || x='-xi'
-		lha ${x} -- "${f}"
-	;;
-	s*)	lha -v -- "${f}"
-	;;
-	t*)	lha -t -- "${f}"
-	;;
-	esac || MyErr
-;;
+		"${lha}" ${x} -- "${f}";;
+	s*)	"${lha}" -v -- "${f}";;
+	t*)	"${lha}" -t -- "${f}";;
+	esac || MyErr;;
 rar)
+	OptExternal unrar
 	case ${mode} in
 	u*)	IntoDir || return
 		x='x'
 		${junk} && x='e'
-		unrar ${x} -- "${f}"
-	;;
+		"${unrar}" ${x} -- "${f}";;
 	s*)	x='l'
 		[ -n "${verbose}" ] && x='vt'
-		unrar ${x} -- "${f}"
-	;;
-	t*)	unrar t -- "${f}"
-	;;
-	esac || MyErr
-;;
+		"${unrar}" ${x} -- "${f}";;
+	t*)	"${unrar}" t -- "${f}";;
+	esac || MyErr;;
 esac
 }
 

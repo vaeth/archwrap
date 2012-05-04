@@ -26,10 +26,12 @@ If you do not want to put the links to your path, you can
 source the archwrap_alias file (in a shell understanding the alias command)
 to obtain a similar effect in an interactive shell.
 
+You also need push.sh from http://github.com/vaeth/push in your path.
+
 For installation under Gentoo, you can use the ebuild from the mv overlay
 (which is available by layman).
 
-Some examples showing the standard usagE:
+Some examples showing the standard usage:
 
 1. a) ppd directory(s) / pd directory(s)
       Packs directory(s) with all subdirectories with all archiver programs

@@ -1,3 +1,6 @@
 #! /usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
-exec 7za a -si -so -- "${@}"
+which=`command -v which` || which=
+[ "${which}" = 'which' ] && za=`which 7za` \
+		|| za=`command -v 7za` || za=
+exec "${za:-7za}" a -si -so -- "${@}"

@@ -1,10 +1,7 @@
 #! /usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 
-. archwrap.sh || {
-	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
-	exit 2
-}
+. archwrap.sh
 
 Usage() {
 	Echo "Usage: ${0##*/} [option] ... [option] directory directory ...
@@ -70,8 +67,7 @@ case ${0##*/} in
 	withsvz=false
 	withlrz=false
 	withlzm=false
-	withtxz=false
-;;
+	withtxz=false;;
 esac
 
 OPTIND=1
@@ -168,6 +164,7 @@ Compare() {
 	Remove "${delname}"
 }
 
+unset za lrzip
 Dopack() {
 	topack=${1%/}
 	if ! test -d "${topack}"
@@ -224,7 +221,8 @@ Dopack() {
 	nameb="${destname}.${svzapp}"
 	if ${svznow}
 	then	Echo "Creating ${nameb}"
-		7za a -- "${nameb}" "${destname}.tar" \
+		OptExternal za 7za
+		"${za}" a -- "${nameb}" "${destname}.tar" \
 			|| Errunp '7za' "${nameb}"
 	fi
 	Compare
@@ -246,7 +244,8 @@ Dopack() {
 	if ${lrznow}
 	then	Echo "Creating ${nameb}"
 		namex="${destname}.tar.lrz"
-		lrzip -L 9 -o "${namex}" -- "${destname}.tar" && {
+		OptExternal lrzip
+		"${lrzip}" -L 9 -o "${namex}" -- "${destname}.tar" && {
 			[ "${namex}" = "${nameb}" ] || \
 				mv -- "${namex}" "${nameb}"
 		} || Errunp 'lrzip' "${nameb}"

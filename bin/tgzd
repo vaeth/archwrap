@@ -1,18 +1,14 @@
 #! /usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 
-. archwrap.sh || {
-	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
-	exit 2
-}
+. archwrap.sh
 
 set -f
 
 poortar=false
 case ${POORTAR} in
 [yYtT1:]*)
-	poortar=:
-;;
+	poortar=:;;
 esac
 
 Usage() {
@@ -63,49 +59,36 @@ comp='g'
 case ${0##*/} in
 *lzma*|*.*lz*)
 	comp='l'
-	xnames=:
-;;
+	xnames=:;;
 *txz*)
-	comp='x'
-;;
+	comp='x';;
 *xz*)
 	comp='x'
-	xnames=:
-;;
+	xnames=:;;
 *bzip*|*.*bz*)
 	comp='b'
-	xnames=:
-;;
+	xnames=:;;
 *gzip*|*.*gz*)
 	comp='g'
-	xnames=:
-;;
+	xnames=:;;
 *.*7z*)
 	comp='7'
-	xnames=:
-;;
+	xnames=:;;
 *.*lr*)
 	comp='r'
-	xnames=:
-;;
+	xnames=:;;
 *tbz*)
-	comp='b'
-;;
+	comp='b';;
 *tgz*)
-	comp='g'
-;;
+	comp='g';;
 *7z*)
-	comp='7'
-;;
+	comp='7';;
 *lz*)
-	comp='l'
-;;
+	comp='l';;
 *lr*)
-	comp='r'
-;;
+	comp='r';;
 *tar*)
-	comp=
-;;
+	comp=;;
 esac
 OPTIND=1
 while getopts 'F@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
@@ -128,7 +111,7 @@ do	case ${opt} in
 	s)	sparse=;;
 	b)	comp="b";;
 	g)	comp="g";;
-	l|z|m)	comp="l";;
+	[lzm])	comp="l";;
 	L)	comp="x";;
 	7)	comp="7";;
 	r)	comp="r";;
@@ -154,7 +137,7 @@ ${follow} && Push taropts '-h'
 
 errfile=false
 if ${use_star}
-then	tarprg="star"
+then	tarprg='star'
 	if ${control}
 	then	Push taropts '-H=exustar' '-acl' '-xfflags'
 	else	Push taropts '-H=pax'
@@ -163,23 +146,17 @@ then	tarprg="star"
 	${ownernum} && Push taropts '-numeric'
 	${sparse} && Push taropts '-sparse'
 	case ${comp} in
-	g)
-		Push taropts '-z'
-		export STAR_COMPRESS_FLAG='--best'
-	;;
-	b)
-		Push taropts '-bz'
-		export STAR_COMPRESS_FLAG='-9'
-	;;
-	7|l|r)
-		poortar=:
-	;;
+	g)	Push taropts '-z'
+		export STAR_COMPRESS_FLAG='--best';;
+	b)	Push taropts '-bz'
+		export STAR_COMPRESS_FLAG='-9';;
+	[7lr])	poortar=:;;
 	esac
 	if ! ${secmode}
 	then	"${tarprg}" -c -no-fsync >/dev/null 2>&1 && \
 			Push taropts '-no-fsync'
 	fi
-else	tarprg='tar'
+else	MakeExternal tarprg tar
 	${ownernum} && Push taropts '--numeric-owner'
 	case ${comp} in
 	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
@@ -287,6 +264,7 @@ StripDirname() {
 	done
 }
 
+unset za lrzip
 DoDir() {
 	StripDirname
 	if [ -z "${dirname}" ] || ! test -d "${dirname}"
@@ -305,10 +283,12 @@ DoDir() {
 	case ${comp} in
 	g)	gzipbest -c -- "${archive}" >"${name}.${ext}";;
 	b)	bzipbest -k -c -- "${archive}" >"${name}.${ext}";;
-	7)	7za a -- "${name}.${ext}" "${archive}";;
+	7)	OptExternal za 7za
+		"${za}" a -- "${name}.${ext}" "${archive}";;
 	l)	lzmabest -k -c -- "${archive}" >"${name}.${ext}";;
 	x)	xzbest -k -c -- "${archive}" >"${name}.${ext}";;
-	r)	lrzip -L 9 -o "${name}.${ext}" -- "${archive}";;
+	r)	OptExternal lrzip
+		"${lrzip}" -L 9 -o "${name}.${ext}" -- "${archive}";;
 	esac || {
 		Error ${?} "error when compressing ${archive}; keeping on disk" >&2
 		return

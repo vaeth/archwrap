@@ -2,6 +2,17 @@
 # This script is part of Martin V\"ath's archwrap project.
 # It provides shell functions for scripts like "tgzd" "zipd" "u"
 
+which=`command -v which` || which=
+MakeExternal() {
+	[ "${which}" = 'which' ] && eval ${1}=\`which ${2}\` \
+		|| eval ${1}=\`command -v ${2}\` || eval ${1}=
+	eval ": \${${1}:=${2}}"
+}
+
+OptExternal() {
+	eval "[ -n \"\${${1}}\" ]" || MakeExternal ${1} ${2-${1}}
+}
+
 Echo() {
 	printf '%s\n' "${*}"
 }
@@ -32,6 +43,11 @@ Exit() {
 	[ ${retvalue} -eq 0 ] && exit
 	ErrMessage 'Proceeded despite earlier errors.'
 	exit ${retvalue}
+}
+
+Push() {
+	. push.sh
+	Push "${@}"
 }
 
 tempname=
@@ -91,31 +107,12 @@ MkTemp() {
 	return 2
 }
 
-Push() {
-	case ${1} in
-	-*)	shift
-		eval ${1}=;;
-	esac
-	PushD_=${1}
-	shift
-	eval "for PushA_
-	do	[ -z \"\${${PushD_}}\" ] && ${PushD_}=\\' \
-			|| ${PushD_}=\"\${${PushD_}} '\"
-		PushB_=\${PushA_}
-		while {
-			PushC_=\${PushB_%%\\'*}
-			[ \"\${PushC_}\" != \"\${PushB_}\" ]
-		}
-		do	${PushD_}=\"\${${PushD_}}\${PushC_}'\\\\''\"
-			PushB_=\${PushB_#*\\'}
-		done
-		${PushD_}=\"\${${PushD_}}\${PushB_}'\"
-	done"
-}
 
 Cd() {
-	cd -- "${1}" >/dev/null 2>&1 && return
-	Error 2 "cd ${PWD}/${1} failed"
+	case ${1} in
+	/*)	cd "${1}" >/dev/null 2>&1 || Error 2 "cd ${1} failed";;
+	*)	cd "./${1#./}" >/dev/null 2>&1 || Error 2 "cd ${PWD}/${1./} failed";;
+	esac
 }
 
 PushTopack() {

@@ -1,10 +1,7 @@
 #! /usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 
-. archwrap.sh || {
-	printf '%s\n' "${0##*/}: cannot source archwrap.sh" >&2
-	exit 2
-}
+. archwrap.sh
 
 Usage() {
 	Echo "Usage: ${0##*/} [option] [user@]host:destfile [ssh-options]
@@ -35,4 +32,5 @@ destfile=${1#*:}
 shift
 Push -c quotefile "${destfile}"
 Push -c quotecmd "cat - ${redirect}${quotefile}"
-exec ssh "${@}" "${desthost}" "sh -c ${quotecmd}"
+MakeExternal s ssh
+exec "${s}" "${@}" "${desthost}" "sh -c ${quotecmd}"
