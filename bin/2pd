@@ -62,7 +62,7 @@ do	case ${1} in
 	esac
 	shift
 done
-[ -n "${1}" ] || Usage
+[ ${#} -ne 0 ] || Usage
 
 chmod=:
 if ${uread} || ${uwrite} || ${uall}
@@ -89,7 +89,7 @@ Cd() {
 rmdirname=
 Gosane() {
 	trap : EXIT HUP INT TERM
-	[ -z "${rmdirname}" ] || {
+	[ -z "${rmdirname:++}" ] || {
 		cd "${currd}" >/dev/null \
 		&& test -d "${rmdirname}" \
 		&& rm -rf -- "${rmdirname}" && rmdirname=
@@ -99,7 +99,7 @@ Gosane() {
 
 for repack
 do	test -d "${repack}" || continue
-	repackp=`readlink -f -- "${repack}"` && [ -n "${repackp}" ] \
+	repackp=`readlink -f -- "${repack}"` && [ -n "${repackp:++}" ] \
 		&& test -d "${repackp}" || Fatal "cannot resolve ${repack}"
 	repackp=${repack%/*}
 	full=${repack##*/}
@@ -120,9 +120,9 @@ do	test -d "${repack}" || continue
 	done
 	rmdirname=
 	trap Gosane EXIT HUP INT TERM
-	if [ -n "${usetemp}" ]
+	if [ -n "${usetemp:++}" ]
 	then	rmdirname=`mktemp -d "/tmp/${0##*/}.XXXXXXXX"` \
-			&& [ -n "${rmdirname}" ] \
+			&& [ -n "${rmdirname:++}" ] \
 			|| Fatal 'cannot create temporary directory'
 		unpackp=${rmdirname}
 	else	unpackp=${currd}
@@ -137,7 +137,7 @@ do	test -d "${repack}" || continue
 	${renrcs} && ! test -r "${tempdirname}/RCS" \
 		&& mmv -r -- "${tempdirname}/;rcs" 'RCS'
 	tempsub=${tempdirname}
-	[ -n "${withparent}" ] && tempsub="${tempsub}/${blank}"
+	[ -n "${withparent:++}" ] && tempsub="${tempsub}/${blank}"
 	pd ${withparent} ${packopt} -- "${tempsub}" || \
 		Fatal "Packing ${tempsub} failed"
 	Gosane

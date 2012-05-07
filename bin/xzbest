@@ -17,7 +17,7 @@ MakeExternal() {
 CalcXz() {
 	xz_opt='--best'
 	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
-		&& [ -n "${m}" ] || return
+		&& [ -n "${m:++}" ] || return
 	[ "${m}" -gt 1800000 ] && return
 	if [ "${m}" -gt 950000 ]
 	then	xz_opt='-8'
@@ -38,14 +38,14 @@ Remove() {
 				break;;
 			esac
 		done
-		[ -z "${r}" ] && continue
-		[ -z "${n}" ] && n=${r} || n="${n} ${r}"
+		[ -z "${r:++}" ] && continue
+		[ -z "${n:++}" ] && n=${r} || n="${n} ${r}"
 	done
 	xz_opt=${n}
 }
 
 xz_opt=${XZ_OPT}
-if [ -z "${xz_opt}" ]
+if [ -z "${xz_opt:++}" ]
 then	CalcXz
 else	Remove '--extreme'
 fi

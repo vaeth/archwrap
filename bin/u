@@ -81,7 +81,7 @@ do	case ${opt} in
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
-[ -n "${1}" ] || Usage
+[ ${#} -ne 0 ] || Usage
 
 if ${dotest}
 then	show=:
@@ -166,7 +166,7 @@ MainLoop() {
 		while [ "${pathname%/}" != "${pathname}" ]
 		do	pathname=${pathname%/}
 		done
-		[ -z "${pathname}" ] && continue
+		[ -z "${pathname:++}" ] && continue
 		case ${pathname} in
 		/*)	:;;
 		*)	pathname="${currdir}/${pathname}";;
@@ -180,13 +180,13 @@ umask=
 IntoDir() {
 	${mdir} || return 0
 	d=${toname}
-	[ -z "${d}" ] && d=${name##*/}
+	[ -z "${d:++}" ] && d=${name##*/}
 	if test -d "${d}"
 	then	if ! ${force}
 		then	Error 1 "Directory ${d} already exists (try -f)"
 			return 1
 		fi
-	else	[ -n "${umask}" ] || umask=`umask -S`
+	else	[ -n "${umask:++}" ] || umask=`umask -S`
 		mkdir -m "${umask}" -- "${d}" >/dev/null
 	fi
 	Cd "${d}"
@@ -447,7 +447,7 @@ zip)
 		eval set -- ${zipopts}
 		"${unzip}" "${@}" -- "${f}";;
 	s*)	x='-l'
-		[ -n "${verbose}" ] && x='-v'
+		[ -n "${verbose:++}" ] && x='-v'
 		"${unzip}" ${x} -- "${f}";;
 	t*)	"${unzip}" -t -- "${f}";;
 	esac || MyErr;;
@@ -500,7 +500,7 @@ rar)
 		${junk} && x='e'
 		"${unrar}" ${x} -- "${f}";;
 	s*)	x='l'
-		[ -n "${verbose}" ] && x='vt'
+		[ -n "${verbose:++}" ] && x='vt'
 		"${unrar}" ${x} -- "${f}";;
 	t*)	"${unrar}" t -- "${f}";;
 	esac || MyErr;;

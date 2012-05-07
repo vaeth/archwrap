@@ -125,11 +125,11 @@ do	case ${opt} in
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
-[ -z "${1}" ] && Usage
+[ ${#} -ne 0 ] || Usage
 
-if [ -n "${remote}" ]
+if [ -n "${remote:++}" ]
 then	export RSH
-	[ -n "${RSH}" ] || RSH=`command -v ssh 2>/dev/null`
+	[ -n "${RSH:++}" ] || RSH=`command -v ssh 2>/dev/null`
 fi
 
 Push -c taropts '-c' '-v'
@@ -193,7 +193,7 @@ else	case ${comp} in
 fi
 
 Tarit() {
-	if [ -z "${remote}" ]
+	if [ -z "${remote:++}" ]
 	then	archive="${d}/${name}.${1}"
 		rm -f -- "${archive}"
 	elif [ "$remote" = 'r' ]
@@ -267,20 +267,20 @@ StripDirname() {
 unset za lrzip
 DoDir() {
 	StripDirname
-	if [ -z "${dirname}" ] || ! test -d "${dirname}"
+	if [ -z "${dirname:++}" ] || ! test -d "${dirname}"
 	then	Error 2 "could not find Directory ${dirname}"
 		return
 	fi
 	name=${dirname##*/}
-	[ -n "${name}" ] || name='_'
+	: ${name:=_}
 	eval "set -- ${taropts}"
 	if ! ${poortar}
 	then	Tarit "${ext}" "${@}"
 		return
 	fi
 	Tarit tar "${@}"
-	[ -z "${comp}" ] && return
-	case ${comp} in
+	case ${comp:-R} in
+	R)	return;;
 	g)	gzipbest -c -- "${archive}" >"${name}.${ext}";;
 	b)	bzipbest -k -c -- "${archive}" >"${name}.${ext}";;
 	7)	OptExternal za 7za

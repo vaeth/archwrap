@@ -36,7 +36,7 @@ do	case ${opt} in
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
-[ -n "${1}" ] || Usage
+[ ${#} -ne 0 ] || Usage
 
 ${symlink} && Push zipopts '-y'
 ${compat}  && Push zipopts '-k'

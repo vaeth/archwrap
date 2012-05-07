@@ -10,7 +10,7 @@ MakeExternal() {
 }
 
 OptExternal() {
-	eval "[ -n \"\${${1}}\" ]" || MakeExternal ${1} ${2-${1}}
+	eval "[ -n \"\${${1}:++}\" ]" || MakeExternal ${1} ${2-${1}}
 }
 
 Echo() {
@@ -53,32 +53,32 @@ Push() {
 tempname=
 RmTemp() {
 	trap : EXIT HUP INT TERM
-	[ -n "${tempname}" ] && rm -f -- "${tempname}"
+	[ -n "${tempname:++}" ] && rm -f -- "${tempname}"
 	tempname=
 	trap - EXIT HUP INT TERM
 }
 
 MkTemp() {
-	[ -n "${tempname}" ] && return
-	if [ -z "${havemktemp}" ]
+	[ -n "${tempname:++}" ] && return
+	if [ -z "${havemktemp:++}" ]
 	then	command -v mktemp >/dev/null 2>&1 && \
 			havemktemp=: || havemktemp=false
 	fi
 	trap RmTemp EXIT HUP INT TERM
 	if ${havemktemp}
 	then	tempname=`mktemp "/tmp/${0##*/}.XXXXXXXX"` && \
-			[ -n "${tempname}" ] && return
+			[ -n "${tempname:++}" ] && return
 		ErrMessage 'cannot create temporary file'
 		return 2
 	fi
-	if [ -z "${have_random}" ]
+	if [ -z "${have_random:++}" ]
 	then	r=${RANDOM}
 		if [ "${r}" = "${RANDOM}" ] && \
 			[ "${r}" = "${RANDOM}" ]
 		then	have_random=false
 			r=`od -d -N2 /dev/random 2>/dev/null` || r=
 			r=`printf '%s' ${r}`
-			if [ -z "${r}" ]
+			if [ -z "${r:++}" ]
 			then	r=1
 			else	r=$(( ${r} % 32768 ))
 				[ "${r}" -eq 0 ] && r=1
@@ -89,7 +89,7 @@ MkTemp() {
 	fi
 	c=0
 	while [ ${c} -le 999 ]
-	do	if [ -n "${t}" ]
+	do	if [ -n "${t:++}" ]
 		then	if ${have_random}
 			then	r=${RANDOM}
 			else	r=$(( ${r} * 13821 ))
@@ -125,5 +125,5 @@ PushTopack() {
 		test -r "${topacki}" && Push topack "${topacki}"
 	done
 	set -f
-	[ -n "${topack}" ]
+	[ -n "${topack:++}" ]
 }

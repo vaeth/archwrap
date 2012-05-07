@@ -128,7 +128,7 @@ do	case ${opt} in
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
-[ -n "${1}" ] || Usage 1
+[ ${#} -eq 0 ] || Usage
 
 Errunp() {
 	Error 2 "Error when calling $1 to create $2"
@@ -152,7 +152,7 @@ Compare() {
 	fi
 	test -r "${nameb}" && sizeb=`stat -c '%s' -- "${nameb}"` \
 		&& [ "${sizeb}" -gt 0 ] || return
-	if [ -n "${modulo}" ]
+	if [ -n "${modulo:++}" ]
 	then	sizea=$(( ${sizea} / ${modulo} ))
 		sizeb=$(( ${sizeb} / ${modulo} ))
 	fi
