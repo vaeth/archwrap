@@ -128,7 +128,7 @@ do	case ${opt} in
 	esac
 done
 shift $(( ${OPTIND} - 1 ))
-[ ${#} -eq 0 ] || Usage
+[ ${#} -gt 0 ] || Usage
 
 Errunp() {
 	Error 2 "Error when calling $1 to create $2"
