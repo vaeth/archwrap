@@ -1,4 +1,4 @@
-#! /usr/bin/env sh
+#!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 which=`command -v which` || which=
 [ "${which}" = 'which' ] && za=`which 7za` \

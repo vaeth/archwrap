@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 # This script is part of Martin V\"ath's archwrap project.
 # It provides shell functions for scripts like "tgzd" "zipd" "u"
 

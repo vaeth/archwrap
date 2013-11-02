@@ -1,4 +1,4 @@
-#! /usr/bin/env sh
+#!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 
 . archwrap.sh
