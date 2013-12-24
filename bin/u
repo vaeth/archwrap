@@ -20,6 +20,7 @@ Uncompress/view/test ARCHIVE. The following options are available:
 -j   junk pathnames (only for zip, arj, rar, 7z)
 -L   convert pathnames into lower case (only for .zip)
 -a   Do not preserve permission attributes (only for .tar)
+-A   Do not preserve extended attributes (xattr) (only for .tar)
 -X   restore user id/group id (only for .zip and .tar) (default for root)
 -x   do not restore user id/group id
 -C   restore Access Control Lists (for star)
@@ -43,6 +44,7 @@ junk=false
 preserve=:
 ownernum=:
 use_acl=false
+use_xattr=:
 caremode=false
 errbreak=false
 lower=false
@@ -53,7 +55,7 @@ case ${0##*/} in
 *uv*)	show=:;;
 esac
 OPTIND=1
-while getopts 'd2:STflvtjaXxcCnLpsPEhH?' opt
+while getopts 'd2:STflvtjaAXxcCnLpsPEhH?' opt
 do	case ${opt} in
 	d)	mdir=:;;
 	2)	mdir=:
@@ -67,6 +69,7 @@ do	case ${opt} in
 	t)	dotest=:;;
 	j)	junk=:;;
 	a)	preserve=false;;
+	A)	use_xattr=false;;
 	X)	restowner=:;;
 	x)	restowner=false;;
 	c)	caremode=:;;
@@ -117,11 +120,12 @@ then	tarprg='star'
 	bzipflag='-bz'
 	semipoor=:
 	${use_acl} && Push taropts '-acl'
-	${ownernum} && Push taropts '--numeric'
+	${ownernum} && Push taropts '-numeric'
 	${restowner} || Push taropts '-o'
 	if ! ${caremode}
 	then	star -c -no-fsync >/dev/null 2>&1 && Push taropts '-no-fsync'
 	fi
+	${use_xattr} && Push taropts '-xattr'
 else	MakeExternal tarprg tar
 	gzipflag='-z'
 	bzipflag='-j'
@@ -133,6 +137,7 @@ else	MakeExternal tarprg tar
 	fi
 	${ownernum} && Push taropts '--numeric-owner'
 	${restowner} && Push taropts '--same-owner'
+	${use_xattr} && Push taropts '--xattr'
 fi
 
 Push -c zipopts

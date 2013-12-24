@@ -29,6 +29,7 @@ Create archive ./zipdir.tgz with contents of zipdir
  -x: Use short names (.tgz instead of .tar.gz etc)
  -S: Use star (instead of tar)
  -T: Use tar  (instead of star) (default)
+ -A: Do not store extended attributes (xattr)
  -C: Store as much as possible (Access Control Lists, creation time...)
  -c: Use secure mode (otherwise -no-fsync is used in star if possible)
  -F: Symbolic links are stored as such (default)
@@ -45,6 +46,7 @@ Create archive ./zipdir.tgz with contents of zipdir
 
 use_star=false
 # command -v star >/dev/null 2>&1 && use_star=:
+xattr=:
 follow=false
 control=false
 withparent=false
@@ -91,8 +93,9 @@ case ${0##*/} in
 	comp=;;
 esac
 OPTIND=1
-while getopts 'F@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
+while getopts 'AF@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
 do	case ${opt} in
+	A)	xattr=false;;
 	F)	follow=false;;
 	S)	use_star=:;;
 	T)	use_star=false;;
@@ -138,10 +141,10 @@ ${follow} && Push taropts '-h'
 errfile=false
 if ${use_star}
 then	tarprg='star'
-	if ${control}
-	then	Push taropts '-H=exustar' '-acl' '-xfflags'
-	else	Push taropts '-H=pax'
-	fi
+	Push taropts '-H=exustar'
+	# Push taropts '-H=pax'
+	${xattr} && Push taropts '-xattr'
+	${control} && Push taropts '-acl' '-xfflags'
 	#Push taropts "-dirmode"
 	${ownernum} && Push taropts '-numeric'
 	${sparse} && Push taropts '-sparse'
@@ -157,6 +160,7 @@ then	tarprg='star'
 			Push taropts '-no-fsync'
 	fi
 else	MakeExternal tarprg tar
+	${xattr} && Push taropts '--xattr'
 	${ownernum} && Push taropts '--numeric-owner'
 	case ${comp} in
 	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
