@@ -2,17 +2,18 @@
 _arguments -s -S -A '-*' : \
 '(* -)'{'-h','-H','-\\?'}'[help]' \
 '-R+[Store output in PATH. Use e.g. -R - for piping to standard output]:output-path:_files -/' \
-'-g[Use gzip     (archivename is ./zipdir.tgz or ./zipdir.tar.gz)]' \
-'-b[Use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)]' \
-'-l[Use lzma     (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)]' \
-'-L[Use xz       (archivename is ./zipdir.txz or ./zipdir.tar.xz)]' \
-'-7[Use 7z       (archivename is ./zipdir.t7z or ./zipdir.tar.7z)]' \
-'-r[Use lrzip    (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)]' \
+'-g[Use gzip (archivename is ./zipdir.tgz or ./zipdir.tar.gz)]' \
+'-b[Use bzip2 (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)]' \
+'-l[Use lzma (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)]' \
+'-L[Use xz (archivename is ./zipdir.txz or ./zipdir.tar.xz)]' \
+'-7[Use 7z (archivename is ./zipdir.t7z or ./zipdir.tar.7z)]' \
+'-r[Use lrzip (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)]' \
 '-t[Use Tar only (archivename is ./zipdir.tar)]' \
 '-X[Use long names (.tar.gz instead of .tgz etc)]' \
 '-x[Use short names (.tgz instead of .tar.gz etc)]' \
-'-S[Use star (instead of tar)]' \
-'-T[Use tar  (instead of star) (default)]' \
+'-A[Do not store extended attributes (set POORTAR=xattr for default)]' \
+'-S[Use star instead of tar, ignore POORTAR, -p, -P]' \
+'-T[Use tar instead of star (default)]' \
 '-C[Store as much as possible (Access Control Lists, creation time...)]' \
 '-c[Use secure mode (otherwise -no-fsync is used in star if possible)]' \
 '-F[Symbolic links are stored as such (default)]' \
@@ -21,7 +22,7 @@ _arguments -s -S -A '-*' : \
 '-d[Pack also (parent) directory into archive, not only its content]' \
 '-D[Pack (parent) directory as "." into archive, not only its content]' \
 '-n[Store plain owner name]' \
-'-p[Use poor tar (without --use-compress-program) (set POORTAR=1 for default)]' \
+'-p[Use poor tar (no compress pipe, xattr) (set POORTAR=1 for default)]' \
 '-s[Do not use the sparse option for tar (this is implied by -p)]' \
-'-P[Use GNU tar (with option --use-compress-program) or star]' \
+'-P[Do not use poor tar]' \
 '*:directory:_files -/'

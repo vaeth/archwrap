@@ -5,12 +5,6 @@
 
 set -f
 
-poortar=false
-case ${POORTAR} in
-[yYtT1:]*)
-	poortar=:;;
-esac
-
 Usage() {
 	Echo '%s\n' "Usage: ${0##*/} [options] [path/]zipdir[/][.tgz]
 Create archive ./zipdir.tgz with contents of zipdir
@@ -27,9 +21,9 @@ Create archive ./zipdir.tgz with contents of zipdir
  -t: Use Tar only (archivename is ./zipdir.tar)
  -X: Use long names (.tar.gz instead of .tgz etc)
  -x: Use short names (.tgz instead of .tar.gz etc)
- -S: Use star (instead of tar)
- -T: Use tar  (instead of star) (default)
- -A: Do not store extended attributes (xattr)
+ -S: Use star instead of tar, ignore POORTAR, -p, -P
+ -T: Use tar instead of star (default)
+ -A: Do not store extended attributes (set POORTAR=xattr for default)
  -C: Store as much as possible (Access Control Lists, creation time...)
  -c: Use secure mode (otherwise -no-fsync is used in star if possible)
  -F: Symbolic links are stored as such (default)
@@ -38,9 +32,9 @@ Create archive ./zipdir.tgz with contents of zipdir
  -d: Pack also (parent) directory into archive, not only its content
  -D: Pack (parent) directory as \".\" into archive, not only its content
  -n: Store plain owner name
- -p: Use poor tar (without --use-compress-program) (set POORTAR=1 for default)
+ -p: Use poor tar (no compress pipe, xattr) (set POORTAR=1 for default)
  -s: Do not use the sparse option for tar (this is implied by -p)
- -P: Use GNU tar (with option --use-compress-program) or star"
+ -P: Do not use poor tar"
 	exit ${1:-1}
 }
 
@@ -109,20 +103,20 @@ do	case ${opt} in
 		dotparent=false;;
 	n)	ownernum=;;
 	t)	comp=;;
-	p)	poortar=:;;
-	P)	poortar=false;;
+	p)	unset POORTAR;;
+	P)	POORTAR=1;;
 	s)	sparse=;;
-	b)	comp="b";;
-	g)	comp="g";;
-	[lzm])	comp="l";;
-	L)	comp="x";;
-	7)	comp="7";;
-	r)	comp="r";;
+	b)	comp=b;;
+	g)	comp=g;;
+	[lzm])	comp=l;;
+	L)	comp=x;;
+	7)	comp=7;;
+	r)	comp=r;;
 	X)	xnames=:;;
 	x)	xnames=false;;
-	'@')	remote="r"
+	'@')	remote=r
 		remotepath=${OPTARG};;
-	R)	remote="R"
+	R)	remote=R
 		remotepath=${OPTARG};;
 	*)	Usage 0;;
 	esac
@@ -138,6 +132,16 @@ fi
 Push -c taropts '-c' '-v'
 ${follow} && Push taropts '-h'
 
+${use_star} && unset POORTAR
+poortar=:
+xattr=:
+case ${POORTAR:-n} in
+[nNfF0lLsS]*)
+	poortar=false;;
+[xX]*)
+	xattr=false;;
+esac
+${poortar} && xattr=false
 errfile=false
 if ${use_star}
 then	tarprg='star'

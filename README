@@ -21,6 +21,10 @@ Also put the files of the subdirectory zsh into your $fpath to obtain
 zsh completion support. (If you do not have root access, you can add the
 corresponding directory with fpath+=("...")) before you
 call compdef from your zsh initialization files).
+If you do have root access it is recommended to put the files archwrap.sh
+not into the PATH (typically /usr/bin) but instead into /usr/share/archwrap/
+and to modify the line ". archwrap.sh" in the binaries into
+". /usr/share/archwrap/archwrap.sh".
 
 If you do not want to put the links to your path, you can
 source the archwrap_alias file (in a shell understanding the alias command)
