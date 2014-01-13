@@ -23,7 +23,7 @@ Create archive ./zipdir.tgz with contents of zipdir
  -x: Use short names (.tgz instead of .tar.gz etc)
  -S: Use star instead of tar, ignore POORTAR, -p, -P
  -T: Use tar instead of star (default)
- -A: Do not store extended attributes (set POORTAR=xattr for default)
+ -A: Do not store extended attributes (set POORTAR=xattr or semi for default)
  -C: Store as much as possible (Access Control Lists, creation time...)
  -c: Use secure mode (otherwise -no-fsync is used in star if possible)
  -F: Symbolic links are stored as such (default)
@@ -136,9 +136,9 @@ ${use_star} && unset POORTAR
 poortar=:
 xattr=:
 case ${POORTAR:-n} in
-[nNfF0lLsS]*)
+[nNfF0lL]*)
 	poortar=false;;
-[xX]*)
+[xXsS]*)
 	xattr=false;;
 esac
 ${poortar} && xattr=false
