@@ -147,7 +147,7 @@ else	MakeExternal tarprg tar
 	fi
 	${ownernum} && Push taropts '--numeric-owner'
 	${restowner} && Push taropts '--same-owner'
-	${use_xattr} && Push taropts '--xattr'
+	${use_xattr} && Push taropts '--xattrs'
 fi
 
 Push -c zipopts

@@ -164,7 +164,7 @@ then	tarprg='star'
 			Push taropts '-no-fsync'
 	fi
 else	MakeExternal tarprg tar
-	${xattr} && Push taropts '--xattr'
+	${xattr} && Push taropts '--xattrs'
 	${ownernum} && Push taropts '--numeric-owner'
 	case ${comp} in
 	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
