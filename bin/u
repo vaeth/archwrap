@@ -241,7 +241,7 @@ DoCases() {
 	*.t7z|*.T7Z)
 		typ='tar.7z'
 		full=:;;
-	*.gz|*.z|*.GZ|.Z)
+	*.gz|*.z|*.GZ|*.Z)
 		typ='gz';;
 	*.bz|*.bz2|*.BZ|*.BZ2)
 		typ='bz2';;
@@ -283,6 +283,7 @@ DoCases() {
 			esac;;
 		esac
 	fi
+	pwdname=${name##*/}
 	DoIt
 	return 0
 }
@@ -399,7 +400,7 @@ gz)
 		then	x="${name}.gz"
 			ln -s -- "${f}" "${x}" || cp -a -- "${f}" "${x}" \
 				&& "${gzip}" -d -N -f -- "${x}"
-		else	"${gzip}" -d -c -- "${f}" >"${name}"
+		else	"${gzip}" -d -c -- "${f}" >"${pwdname}"
 		fi;;
 	s*)	"${gzip}" -l -v -- "${f}";;
 	t*)	"${gzip}" -t -v -- "${f}";;
@@ -412,7 +413,7 @@ bz2)
 		then	x="${name}.gz"
 			ln -s -- "${f}" "${x}" || cp -a -- "${f}" "${x}" \
 				&& "${bzip}" -d -- "${x}"
-		else	"${bzip}" -d -k -c -- "${f}" >"${name}"
+		else	"${bzip}" -d -k -c -- "${f}" >"${pwdname}"
 		fi;;
 	s*)	"${bzip}" -l -v -- "${f}";;
 	t*)	"${bzip}" -t -v -- "${f}";;
@@ -439,7 +440,7 @@ lrz)
 	u*)	IntoDir || return
 		if ${mdir}
 		then	"${lrzip}" -d -- "${f}"
-		else	"${lrzip}" -d -o "${name}" -- "${f}"
+		else	"${lrzip}" -d -o "${pwdname}" -- "${f}"
 		fi || MyErr;;
 	s*)	MyErrNot;;
 	t*)	MyErrNot;;
