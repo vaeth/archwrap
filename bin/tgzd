@@ -6,7 +6,7 @@
 set -f
 
 Usage() {
-	Echo '%s\n' "Usage: ${0##*/} [options] [path/]zipdir[/][.tgz]
+	Echo "Usage: ${0##*/} [options] [path/]zipdir[/][.tgz]
 Create archive ./zipdir.tgz with contents of zipdir
  -@ path  Store output in path/zipdir.tgz
           The typical call is -@ user@machine: or -@ user@mach:/tmp/
@@ -134,7 +134,6 @@ ${follow} && Push taropts '-h'
 
 ${use_star} && unset POORTAR
 poortar=:
-xattr=:
 case ${POORTAR:-n} in
 [nNfF0lL]*)
 	poortar=false;;
