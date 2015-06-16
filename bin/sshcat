@@ -20,17 +20,17 @@ modify/omit the second part of the pipe, of course)."
 redirect='>'
 OPTIND=1
 while getopts 'ahH?' opt
-do	case ${opt} in
+do	case $opt in
 	a)	redirect='>>';;
 	*)	Usage 0;;
 	esac
 done
-shift $(( ${OPTIND} - 1 ))
+shift $(( $OPTIND - 1 ))
 desthost=${1%%:*}
 destfile=${1#*:}
-[ "${desthost}" = "${1}" ] || [ -z "${destfile:++}" ] && Usage 1
+[ "$desthost" = "$1" ] || [ -z "${destfile:++}" ] && Usage 1
 shift
-Push -c quotefile "${destfile}"
-Push -c quotecmd "cat - ${redirect}${quotefile}"
+Push -c quotefile "$destfile"
+Push -c quotecmd "cat - $redirect$quotefile"
 MakeExternal s ssh
-exec "${s}" "${@}" "${desthost}" "sh -c ${quotecmd}"
+exec "$s" "$@" "$desthost" "sh -c $quotecmd"

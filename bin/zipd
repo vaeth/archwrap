@@ -23,7 +23,7 @@ errbreak=false
 compat=false
 OPTIND=1
 while getopts 'FfdDkEhH?' opt
-do	case ${opt} in
+do	case $opt in
 	F)	symlink=:;;
 	d)	withparent=:
 		dotparent=false;;
@@ -35,48 +35,48 @@ do	case ${opt} in
 	*)	Usage 0;;
 	esac
 done
-shift $(( ${OPTIND} - 1 ))
-[ ${#} -ne 0 ] || Usage
+shift $(( $OPTIND - 1 ))
+[ $# -ne 0 ] || Usage
 
-${symlink} && Push zipopts '-y'
-${compat}  && Push zipopts '-k'
+$symlink && Push zipopts '-y'
+$compat  && Push zipopts '-k'
 
 MakeExternal zip zip
 
-d=${PWD}
+d=$PWD
 for argu
 do	stat=0
 	name=${argu%.zip}
 	name=${name%/}
-	Cd "${d}" || stat=${?}
-	if ! test -d "${name}"
+	Cd "$d" || stat=$?
+	if ! test -d "$name"
 	then	Err 1 "Could not find Directory $name"
 		continue
 	fi
-	Cd "${name}" || stat=${?}
-	zipfile="${d}/${name##*/}"
-	if ${compat}
-	then	zipfile="${zipfile}.ZIP"
-	else	zipfile="${zipfile}.zip"
+	Cd "$name" || stat=$?
+	zipfile=$d/${name##*/}
+	if $compat
+	then	zipfile=$zipfile.ZIP
+	else	zipfile=$zipfile.zip
 	fi
-	if test -r "${zipfile}"
-	then	Echo "removing old ${zipfile}"
-		rm -f -- "${zipfile}"
+	if test -r "$zipfile"
+	then	Echo "removing old $zipfile"
+		rm -f -- "$zipfile"
 	fi
-	if ${withparent}
-	then	[ ${stat} -eq 0 ] && Cd .. || stat=${?}
-		if ${dotparent}
+	if $withparent
+	then	[ $stat -eq 0 ] && Cd .. || stat=$?
+		if $dotparent
 		then	Push -c topack='.'
 		else	Push -c topack "${name##*/}"
 		fi
 	else	PushTopack || {
 			stat=2
-			Error ${stat} "not creating empty archive ${archive}"
+			Error $stat "not creating empty archive $archive"
 		}
 	fi
-	[ ${stat} -eq 0 ] && \
-		eval "\"\${zip}\" ${zipopts} \"\${zipfile}\" ${topack}" \
-		|| Error ${?} "Error when zipping ${name}"
+	[ $stat -eq 0 ] && \
+		eval "\"\$zip\" $zipopts \"\$zipfile\" $topack" \
+		|| Error $? "Error when zipping $name"
 done
 
 Exit

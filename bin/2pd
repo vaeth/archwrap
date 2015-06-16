@@ -2,11 +2,11 @@
 # This script is part of Martin V\"ath's archwrap project.
 
 Echo() {
-	printf '%s\n' "${*}"
+	printf '%s\n' "$*"
 }
 
 Fatal() {
-	Echo "${0##*/}: ${*}" >&2
+	Echo "${0##*/}: $*" >&2
 	exit 2
 }
 
@@ -41,8 +41,8 @@ usetemp=:
 case ${0##*/} in
 *ppd*)	packopt='-A/RLW';;
 esac
-while [ ${#} -gt 0 ]
-do	case ${1} in
+while [ $# -gt 0 ]
+do	case $1 in
 	--[hH]*|-h|'-?')
 		Usage 0;;
 	-L)	unpackl='-L';;
@@ -57,32 +57,32 @@ do	case ${1} in
 	-tmp)	usetemp=false;;
 	-d)	withparent='-d';;
 	--)	shift; break;;
-	-*)	packopt="${packopt} ${1}";;
+	-*)	packopt="$packopt $1";;
 	*)	break;;
 	esac
 	shift
 done
-[ ${#} -ne 0 ] || Usage
+[ $# -ne 0 ] || Usage
 
 chmod=:
-if ${uread} || ${uwrite} || ${uall}
+if $uread || $uwrite || $uall
 then	chmod=chmod
-	${uread} && ${uwrite} && uall=:
-	${uread}  && chmodarg='go-rx'
-	${uwrite} && chmodarg='go-w'
-	${uall}   && chmodarg='go-rwx'
+	$uread && $uwrite && uall=:
+	$uread  && chmodarg='go-rx'
+	$uwrite && chmodarg='go-w'
+	$uall   && chmodarg='go-rwx'
 fi
 
-currd=${PWD} || currd=
-case ${currd} in
+currd=$PWD || currd=
+case $currd in
 /*)	:;;
 *)	Fatal "cannot determine current directory"
 esac
 
 Cd() {
-	case ${1} in
-	/*)	cd "${1}" >/dev/null 2>&1 || Fatal "cd ${1} failed";;
-	*)	cd "./${1#./}" >/dev/null 2>&1 || Fatal "cd ${PWD}/${1#./} failed";;
+	case $1 in
+	/*)	cd "$1" >/dev/null 2>&1 || Fatal "cd $1 failed";;
+	*)	cd "./${1#./}" >/dev/null 2>&1 || Fatal "cd $PWD/${1#./} failed";;
 	esac
 }
 
@@ -90,30 +90,30 @@ rmdirname=
 Gosane() {
 	trap : EXIT HUP INT TERM
 	[ -z "${rmdirname:++}" ] || {
-		cd "${currd}" >/dev/null \
-		&& test -d "${rmdirname}" \
-		&& rm -rf -- "${rmdirname}" && rmdirname=
+		cd "$currd" >/dev/null \
+		&& test -d "$rmdirname" \
+		&& rm -rf -- "$rmdirname" && rmdirname=
 	}
 	trap - EXIT HUP INT TERM
 }
 
 for repack
-do	test -d "${repack}" || continue
-	repackp=`readlink -f -- "${repack}"` && [ -n "${repackp:++}" ] \
-		&& test -d "${repackp}" || Fatal "cannot resolve ${repack}"
+do	test -d "$repack" || continue
+	repackp=`readlink -f -- "$repack"` && [ -n "${repackp:++}" ] \
+		&& test -d "$repackp" || Fatal "cannot resolve $repack"
 	repackp=${repack%/*}
 	full=${repack##*/}
-	blank=${full}
+	blank=$full
 	for bl in \
 		z bz2 bz tbz2 tbz gz tgz taz dir 7z t7z lz lzm lzma \
 		xz tlz txz lrz tlr tlrz lha lzh arj arz zip jar okular rar \
 		Z BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR 7Z T7Z LZ LZM LZMA \
 		XZ TLZ TXZ LRZ TLR TLRZ LHA LZH ARJ ARZ ZIP JAR OKULAR RAR
-	do	case ${blank} in
-		*.tar."${bl}"|*.TAR."${bl}")
+	do	case $blank in
+		*.tar."$bl"|*.TAR."$bl")
 			blank=${blank%.*.*}
 			break;;
-		*."${bl}")
+		*."$bl")
 			blank=${blank%.*}
 			break;;
 		esac
@@ -124,21 +124,21 @@ do	test -d "${repack}" || continue
 	then	rmdirname=`mktemp -d "/tmp/${0##*/}.XXXXXXXX"` \
 			&& [ -n "${rmdirname:++}" ] \
 			|| Fatal 'cannot create temporary directory'
-		unpackp=${rmdirname}
-	else	unpackp=${currd}
+		unpackp=$rmdirname
+	else	unpackp=$currd
 	fi
-	tempdirname="${unpackp}/${blank}"
-	test -r "${tempdirname}" && Fatal "${tempdirname} already exists"
-	Cd "${unpackp}"
-	u -d ${unpackx} ${unpackl} -- "${repackp}/${full}" || \
-		Fatal "cannot unpack ${repackp}/${full}"
-	Cd "${repackp}"
-	${chmod} -R -- "${chmodarg}" "${tempdirname}"
-	${renrcs} && ! test -r "${tempdirname}/RCS" \
-		&& mmv -r -- "${tempdirname}/;rcs" 'RCS'
-	tempsub=${tempdirname}
-	[ -n "${withparent:++}" ] && tempsub="${tempsub}/${blank}"
-	pd ${withparent} ${packopt} -- "${tempsub}" || \
-		Fatal "Packing ${tempsub} failed"
+	tempdirname=$unpackp/$blank
+	test -r "$tempdirname" && Fatal "$tempdirname already exists"
+	Cd "$unpackp"
+	u -d $unpackx $unpackl -- "$repackp/$full" || \
+		Fatal "cannot unpack $repackp/$full"
+	Cd "$repackp"
+	$chmod -R -- "$chmodarg" "$tempdirname"
+	$renrcs && ! test -r "$tempdirname/RCS" \
+		&& mmv -r -- "$tempdirname/;rcs" 'RCS'
+	tempsub=$tempdirname
+	[ -n "${withparent:++}" ] && tempsub=$tempsub/$blank
+	pd $withparent $packopt -- "$tempsub" || \
+		Fatal "Packing $tempsub failed"
 	Gosane
 done

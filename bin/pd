@@ -72,7 +72,7 @@ esac
 
 OPTIND=1
 while getopts 'XdcCSTsnaA7/lLrWwRNtUzZbBgGpFf0512486EhH?' opt
-do	case ${opt} in
+do	case $opt in
 	X)	tgzapp='tar.gz'
 		tbzapp='tar.bz2'
 		svzapp='tar.7z'
@@ -127,135 +127,135 @@ do	case ${opt} in
 	*)	Usage 0;;
 	esac
 done
-shift $(( ${OPTIND} - 1 ))
-[ ${#} -gt 0 ] || Usage
+shift $(( $OPTIND - 1 ))
+[ $# -gt 0 ] || Usage
 
 Errunp() {
 	Error 2 "Error when calling $1 to create $2"
 }
 
 eval "Remove() {
-	${showonly} rm -- \"\${@}\"
+	$showonly rm -- \"\$@\"
 }"
 
-# The function Compare expects ${namea} and ${nameb} to be set to the filenames
+# The function Compare expects $namea and $nameb to be set to the filenames
 # to be compared. It will then delete the larger file (length modulo $modulo),
 # and will set namea to the non-deleted file. If the length is the same,
 # the second file will be deleted.
 # If one or both files do not exist, nothing is deleted. In this case,
 # namea is set to the file which exists (if none exists, it is put to nameb).
 Compare() {
-	if ! test -r "${namea}" || ! sizea=`stat -c '%s' -- "${namea}"` \
-		|| ! [ "${sizea}" -gt 0 ]
-	then	namea="${nameb}"
+	if ! test -r "$namea" || ! sizea=`stat -c '%s' -- "$namea"` \
+		|| ! [ "$sizea" -gt 0 ]
+	then	namea=$nameb
 		return
 	fi
-	test -r "${nameb}" && sizeb=`stat -c '%s' -- "${nameb}"` \
-		&& [ "${sizeb}" -gt 0 ] || return
+	test -r "$nameb" && sizeb=`stat -c '%s' -- "$nameb"` \
+		&& [ "$sizeb" -gt 0 ] || return
 	if [ -n "${modulo:++}" ]
-	then	sizea=$(( ${sizea} / ${modulo} ))
-		sizeb=$(( ${sizeb} / ${modulo} ))
+	then	sizea=$(( $sizea / $modulo ))
+		sizeb=$(( $sizeb / $modulo ))
 	fi
-	if [ ${sizea} -gt ${sizeb} ]
-	then	delname=${namea}
-		namea=${nameb}
-	else	delname=${nameb}
+	if [ $sizea -gt $sizeb ]
+	then	delname=$namea
+		namea=$nameb
+	else	delname=$nameb
 	fi
-	Remove "${delname}"
+	Remove "$delname"
 }
 
 unset za lrzip
 Dopack() {
 	topack=${1%/}
-	if ! test -d "${topack}"
-	then	Error 1 "argument ${destname} is not a directory"
+	if ! test -d "$topack"
+	then	Error 1 "argument $destname is not a directory"
 		continue
 	fi
 	destname=${topack##*/}
-	zipnow=${withzip}
-	tarnow=${withtar}
-	tgznow=${withtgz}
-	tbznow=${withtbz}
-	svznow=${withsvz}
-	lzmnow=${withlzm}
-	txznow=${withtxz}
-	lrznow=${withlrz}
-	if ${preserv}
-	then	${zipnow} && test -s "${destname}.zip" && zipnow=false
-		${tgznow} && test -s "${destname}.${tgzapp}" && tgznow=false
-		${tbznow} && test -s "${destname}.${tbzapp}" && tbznow=false
-		${svznow} && test -s "${destname}.${svzapp}" && svznow=false
-		${lzmnow} && test -s "${destname}.${lzmapp}" && lzmnow=false
-		${lrznow} && test -s "${destname}.${lrzapp}" && lrznow=false
+	zipnow=$withzip
+	tarnow=$withtar
+	tgznow=$withtgz
+	tbznow=$withtbz
+	svznow=$withsvz
+	lzmnow=$withlzm
+	txznow=$withtxz
+	lrznow=$withlrz
+	if $preserv
+	then	$zipnow && test -s "$destname.zip" && zipnow=false
+		$tgznow && test -s "$destname.$tgzapp" && tgznow=false
+		$tbznow && test -s "$destname.$tbzapp" && tbznow=false
+		$svznow && test -s "$destname.$svzapp" && svznow=false
+		$lzmnow && test -s "$destname.$lzmapp" && lzmnow=false
+		$lrznow && test -s "$destname.$lrzapp" && lrznow=false
 	fi
-	if ${tgznow} || ${tbznow} || ${svznow} || ${lzmnow} || ${lrznow}
+	if $tgznow || $tbznow || $svznow || $lzmnow || $lrznow
 	then	tarnow=:
 	fi
-	${preserv} && ${tarnow} && test -s "${destname}.tar" && tarnow=false
+	$preserv && $tarnow && test -s "$destname.tar" && tarnow=false
 
-	namea="${destname}.zip"
-	if ${zipnow}
-	then	Echo "Creating ${namea}"
-		zipd ${withparent} ${linksresolve} -- "${topack}" \
-			|| Errunp 'zipd' "${namea}"
+	namea=$destname.zip
+	if $zipnow
+	then	Echo "Creating $namea"
+		zipd $withparent $linksresolve -- "$topack" \
+			|| Errunp 'zipd' "$namea"
 	fi
-	if ${tarnow}
-	then	Echo "Creating ${destname}.tar"
-		tgzd -t ${nostar} ${control} ${secmode} ${withparent} ${linksresolve} ${plainowner} -- "${topack}" \
-			|| Errunp 'tgzd' "${destname}.tar"
+	if $tarnow
+	then	Echo "Creating $destname.tar"
+		tgzd -t $nostar $control $secmode $withparent $linksresolve $plainowner -- "$topack" \
+			|| Errunp 'tgzd' "$destname.tar"
 	fi
-	nameb="${destname}.${tgzapp}"
-	if ${tgznow}
-	then	Echo "Creating ${nameb}"
-		gzipbest -c -- "${destname}.tar" >"${nameb}" \
-			|| Errunp 'gzip' "${nameb}"
-	fi
-	Compare
-	nameb="${destname}.${tbzapp}"
-	if ${tbznow}
-	then	Echo "Creating ${nameb}"
-		bzipbest -k -c -- "${destname}.tar" >"${nameb}" \
-			|| Errunp 'bzip2' "${nameb}"
+	nameb=$destname.$tgzapp
+	if $tgznow
+	then	Echo "Creating $nameb"
+		gzipbest -c -- "$destname.tar" >"$nameb" \
+			|| Errunp 'gzip' "$nameb"
 	fi
 	Compare
-	nameb="${destname}.${svzapp}"
-	if ${svznow}
-	then	Echo "Creating ${nameb}"
+	nameb=$destname.$tbzapp
+	if $tbznow
+	then	Echo "Creating $nameb"
+		bzipbest -k -c -- "$destname.tar" >"$nameb" \
+			|| Errunp 'bzip2' "$nameb"
+	fi
+	Compare
+	nameb=$destname.$svzapp
+	if $svznow
+	then	Echo "Creating $nameb"
 		OptExternal za 7za
-		"${za}" a -- "${nameb}" "${destname}.tar" \
-			|| Errunp '7za' "${nameb}"
+		"$za" a -- "$nameb" "$destname.tar" \
+			|| Errunp '7za' "$nameb"
 	fi
 	Compare
-	nameb="${destname}.${lzmapp}"
-	if ${lzmnow}
-	then	Echo "Creating ${nameb}"
-		lzmabest -k -c -- "${destname}.tar" >"${nameb}" \
-			|| Errunp 'lzma' "${nameb}"
+	nameb=$destname.$lzmapp
+	if $lzmnow
+	then	Echo "Creating $nameb"
+		lzmabest -k -c -- "$destname.tar" >"$nameb" \
+			|| Errunp 'lzma' "$nameb"
 	fi
 	Compare
-	nameb="${destname}.${txzapp}"
-	if ${txznow}
-	then	Echo "Creating ${nameb}"
-		xzbest -k -c -- "${destname}.tar" >"${nameb}" \
-			|| Errunp 'lzma' "${nameb}"
+	nameb=$destname.$txzapp
+	if $txznow
+	then	Echo "Creating $nameb"
+		xzbest -k -c -- "$destname.tar" >"$nameb" \
+			|| Errunp 'lzma' "$nameb"
 	fi
 	Compare
-	nameb="${destname}.${lrzapp}"
-	if ${lrznow}
-	then	Echo "Creating ${nameb}"
-		namex="${destname}.tar.lrz"
+	nameb=$destname.$lrzapp
+	if $lrznow
+	then	Echo "Creating $nameb"
+		namex=$destname.tar.lrz
 		OptExternal lrzip
-		"${lrzip}" -L 9 -o "${namex}" -- "${destname}.tar" && {
-			[ "${namex}" = "${nameb}" ] || \
-				mv -- "${namex}" "${nameb}"
-		} || Errunp 'lrzip' "${nameb}"
+		"$lrzip" -L 9 -o "$namex" -- "$destname.tar" && {
+			[ "$namex" = "$nameb" ] || \
+				mv -- "$namex" "$nameb"
+		} || Errunp 'lrzip' "$nameb"
 	fi
 	Compare
-	! ${withtar} && ${tarnow} && Remove "${destname}.tar"
+	! $withtar && $tarnow && Remove "$destname.tar"
 }
 
 for drpck
-do	Dopack "${drpck}"
+do	Dopack "$drpck"
 done
 
 Exit

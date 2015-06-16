@@ -88,7 +88,7 @@ case ${0##*/} in
 esac
 OPTIND=1
 while getopts 'AF@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
-do	case ${opt} in
+do	case $opt in
 	A)	xattr=false;;
 	F)	follow=false;;
 	S)	use_star=:;;
@@ -115,14 +115,14 @@ do	case ${opt} in
 	X)	xnames=:;;
 	x)	xnames=false;;
 	'@')	remote=r
-		remotepath=${OPTARG};;
+		remotepath=$OPTARG;;
 	R)	remote=R
-		remotepath=${OPTARG};;
+		remotepath=$OPTARG;;
 	*)	Usage 0;;
 	esac
 done
-shift $(( ${OPTIND} - 1 ))
-[ ${#} -ne 0 ] || Usage
+shift $(( $OPTIND - 1 ))
+[ $# -ne 0 ] || Usage
 
 if [ -n "${remote:++}" ]
 then	export RSH
@@ -130,9 +130,9 @@ then	export RSH
 fi
 
 Push -c taropts '-c' '-v'
-${follow} && Push taropts '-h'
+$follow && Push taropts '-h'
 
-${use_star} && unset POORTAR
+$use_star && unset POORTAR
 poortar=:
 case ${POORTAR:-n} in
 [nNfF0lL]*)
@@ -141,32 +141,32 @@ case ${POORTAR:-n} in
 	xattr=false
 	poortar=false;;
 esac
-${poortar} && xattr=false
+$poortar && xattr=false
 errfile=false
-if ${use_star}
+if $use_star
 then	tarprg='star'
 	Push taropts '-H=exustar'
 	# Push taropts '-H=pax'
-	${xattr} && Push taropts '-xattr'
-	${control} && Push taropts '-acl' '-xfflags'
+	$xattr && Push taropts '-xattr'
+	$control && Push taropts '-acl' '-xfflags'
 	#Push taropts "-dirmode"
-	${ownernum} && Push taropts '-numeric'
-	${sparse} && Push taropts '-sparse'
-	case ${comp} in
+	$ownernum && Push taropts '-numeric'
+	$sparse && Push taropts '-sparse'
+	case $comp in
 	g)	Push taropts '-z'
 		export STAR_COMPRESS_FLAG='--best';;
 	b)	Push taropts '-bz'
 		export STAR_COMPRESS_FLAG='-9';;
 	[7lr])	poortar=:;;
 	esac
-	if ! ${secmode}
-	then	"${tarprg}" -c -no-fsync >/dev/null 2>&1 && \
+	if ! $secmode
+	then	"$tarprg" -c -no-fsync >/dev/null 2>&1 && \
 			Push taropts '-no-fsync'
 	fi
 else	MakeExternal tarprg tar
-	${xattr} && Push taropts '--xattrs'
-	${ownernum} && Push taropts '--numeric-owner'
-	case ${comp} in
+	$xattr && Push taropts '--xattrs'
+	$ownernum && Push taropts '--numeric-owner'
+	case $comp in
 	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
 	b)	Push taropts '--use-compress-program' "${0%/*}/bzipbest";;
 	7)	Push taropts '--use-compress-program' "${0%/*}/7zbest";;
@@ -174,13 +174,13 @@ else	MakeExternal tarprg tar
 	x)	Push taropts '--use-compress-program' "${0%/*}/xzbest";;
 	r)	poortar=:;;
 	esac
-	if ${poortar}
+	if $poortar
 	then	errfile=:
-	else	${sparse} && Push taropts '-S'
+	else	$sparse && Push taropts '-S'
 	fi
 fi
-if ${xnames}
-then	case ${comp} in
+if $xnames
+then	case $comp in
 	g)	ext='tar.gz';;
 	b)	ext='tar.bz2';;
 	7)	ext='tar.7z';;
@@ -189,7 +189,7 @@ then	case ${comp} in
 	r)	ext='tar.lrz';;
 	*)	ext='tar';;
 	esac
-else	case ${comp} in
+else	case $comp in
 	g)	ext='tgz';;
 	b)	ext='tbz';;
 	7)	ext='t7z';;
@@ -202,50 +202,50 @@ fi
 
 Tarit() {
 	if [ -z "${remote:++}" ]
-	then	archive="${d}/${name}.${1}"
-		rm -f -- "${archive}"
+	then	archive=$d/$name.$1
+		rm -f -- "$archive"
 	elif [ "$remote" = 'r' ]
-	then	archive="${remotepath}${name}.${1}"
-	else	archive="${remotepath}"
+	then	archive=$remotepath$name.$1
+	else	archive=$remotepath
 	fi
 	shift
-	Cd "${dirname}" || return
+	Cd "$dirname" || return
 	stat=0
-	if ${errfile}
-	then	MkTemp || stat=${?}
+	if $errfile
+	then	MkTemp || stat=$?
 	fi
-	if ${withparent}
-	then	if ${dotparent}
+	if $withparent
+	then	if $dotparent
 		then	Push -c topack '.'
 		else	Push -c topack "${name##*/}"
 		fi
-		Cd .. || stat=${?}
+		Cd .. || stat=$?
 	else	PushTopack || {
 			stat=2
-			Error ${stat} "not creating empty archive ${archive}"
+			Error $stat "not creating empty archive $archive"
 		}
 	fi
-	[ ${stat} -eq 0 ] && if ${errfile}
-	then	eval "\"\${tarprg}\" \"\${@}\" -f \"\${archive}\" -- ${topack} 2>\"\${tempname}\""
-	else	eval "\"\${tarprg}\" \"\${@}\" -f \"\${archive}\" -- ${topack}"
-	fi || stat=${?}
-	if ${errfile}
-	then	if test -s "${tempname}"
-		then	ErrMessage "tar of ${name} led to the following error message:"
-			cat -- "${tempname}" >&2
-			[ ${stat} -eq 0 ] && stat=2
+	[ $stat -eq 0 ] && if $errfile
+	then	eval "\"\$tarprg\" \"\$@\" -f \"\$archive\" -- $topack 2>\"\$tempname\""
+	else	eval "\"\$tarprg\" \"\$@\" -f \"\$archive\" -- $topack"
+	fi || stat=$?
+	if $errfile
+	then	if test -s "$tempname"
+		then	ErrMessage "tar of $name led to the following error message:"
+			cat -- "$tempname" >&2
+			[ $stat -eq 0 ] && stat=2
 		fi
 		RmTemp
 	fi
-	Cd "${d}" || stat=${?}
-	[ ${stat} -ne 0 ] && Error ${stat} "error occured during tar of ${name}"
+	Cd "$d" || stat=$?
+	[ $stat -ne 0 ] && Error $stat "error occured during tar of $name"
 }
 
 MainLoop() {
-	d=${PWD}
+	d=$PWD
 	for progargs
-	do	dirname=${progargs}
-		while [ "${dirname%/}" != "${dirname}" ]
+	do	dirname=$progargs
+		while [ "${dirname%/}" != "$dirname" ]
 		do	dirname=${dirname%/}
 		done
 		DoDir
@@ -254,18 +254,18 @@ MainLoop() {
 
 StripDirname() {
 	for strip in taz tgz tbz dir tlz tlrz tlr
-	do	case ${dirname} in
-		*."${strip}")
+	do	case $dirname in
+		*."$strip")
 			dirname=${dirname%.*}
 			return;;
 		esac
 	done
 	for strip in z gz bz bz2 7z t7z lz lzm lzma lrz
-	do	case ${dirname} in
-		*.tar."${strip}")
+	do	case $dirname in
+		*.tar."$strip")
 			dirname=${dirname%.*.*}
 			return;;
-		*."${strip}")
+		*."$strip")
 			dirname=${dirname%.*}
 			return;;
 		esac
@@ -275,34 +275,34 @@ StripDirname() {
 unset za lrzip
 DoDir() {
 	StripDirname
-	if [ -z "${dirname:++}" ] || ! test -d "${dirname}"
-	then	Error 2 "could not find Directory ${dirname}"
+	if [ -z "${dirname:++}" ] || ! test -d "$dirname"
+	then	Error 2 "could not find Directory $dirname"
 		return
 	fi
 	name=${dirname##*/}
 	: ${name:=_}
-	eval "set -- ${taropts}"
-	if ! ${poortar}
-	then	Tarit "${ext}" "${@}"
+	eval "set -- $taropts"
+	if ! $poortar
+	then	Tarit "$ext" "$@"
 		return
 	fi
-	Tarit tar "${@}"
+	Tarit tar "$@"
 	case ${comp:-R} in
 	R)	return;;
-	g)	gzipbest -c -- "${archive}" >"${name}.${ext}";;
-	b)	bzipbest -k -c -- "${archive}" >"${name}.${ext}";;
+	g)	gzipbest -c -- "$archive" >"$name.$ext";;
+	b)	bzipbest -k -c -- "$archive" >"$name.$ext";;
 	7)	OptExternal za 7za
-		"${za}" a -- "${name}.${ext}" "${archive}";;
-	l)	lzmabest -k -c -- "${archive}" >"${name}.${ext}";;
-	x)	xzbest -k -c -- "${archive}" >"${name}.${ext}";;
+		"$za" a -- "$name.$ext" "$archive";;
+	l)	lzmabest -k -c -- "$archive" >"$name.$ext";;
+	x)	xzbest -k -c -- "$archive" >"$name.$ext";;
 	r)	OptExternal lrzip
-		"${lrzip}" -L 9 -o "${name}.${ext}" -- "${archive}";;
+		"$lrzip" -L 9 -o "$name.$ext" -- "$archive";;
 	esac || {
-		Error ${?} "error when compressing ${archive}; keeping on disk" >&2
+		Error $? "error when compressing $archive; keeping on disk" >&2
 		return
 	}
-	rm -f -- "${archive}"
+	rm -f -- "$archive"
 }
 
-MainLoop "${@}"
+MainLoop "$@"
 Exit
