@@ -34,7 +34,8 @@ Create archive ./zipdir.tgz with contents of zipdir
  -n: Store plain owner name
  -p: Use poor tar (no compress pipe, xattr) (set POORTAR=1 for default)
  -s: Do not use the sparse option for tar (this is implied by -p)
- -P: Do not use poor tar"
+ -P: Do not use poor tar
+ -q: Be quiet"
 	exit ${1:-1}
 }
 
@@ -52,6 +53,7 @@ secmode=false
 remote=
 errbreak=false
 comp='g'
+quiet=false
 case ${0##*/} in
 *lzma*|*.*lz*)
 	comp='l'
@@ -87,8 +89,9 @@ case ${0##*/} in
 	comp=;;
 esac
 OPTIND=1
-while getopts 'AF@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
+while getopts 'qAF@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
 do	case $opt in
+	q)	quiet=:;;
 	A)	xattr=false;;
 	F)	follow=false;;
 	S)	use_star=:;;
@@ -129,7 +132,8 @@ then	export RSH
 	[ -n "${RSH:++}" ] || RSH=`command -v ssh 2>/dev/null`
 fi
 
-Push -c taropts '-c' '-v'
+Push -c taropts '-c'
+$quiet  || Push taropts '-v'
 $follow && Push taropts '-h'
 
 $use_star && unset POORTAR

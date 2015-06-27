@@ -39,4 +39,6 @@ _arguments -s -S -A '-*' : \
 '-4[compare sizes modulo 4k]' \
 '-8[compare sizes modulo 8k]' \
 '-6[compare sizes modulo 16k]' \
+'-q[quiet]' \
+'-v[verbose]' \
 '*:directory:_files -/'

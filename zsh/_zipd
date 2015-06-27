@@ -7,4 +7,5 @@ _arguments -s -S -A '-*' : \
 '-d[Pack also (parent) directory into archive, not only its content]' \
 '-D[Pack (parent) directory as . into archive, not only its content]' \
 '-E[Break on error]' \
+'-q[quiet]' \
 '*:directory:_files -/'

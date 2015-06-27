@@ -14,10 +14,10 @@ Usage() {
 	Echo "Usage: ${0##*/} [option] ... [option] archive archive ...
 Repack archives.
 Option is one of the following:
--tmp   Use current directory instead of /tmp for tempdirectory
+-tmp   use current directory instead of /tmp for tempdirectory
 -L     convert pathnames into lower case (only for .zip)
--d     Use pd -d. Assumes that archive contains only directory 'archive'
--x     Do *not* restore user/group id when restoring (only for .zip)
+-d     use pd -d. Assumes that archive contains only directory 'archive'
+-x     do *not* restore user/group id when restoring (only for .zip)
 -uw    unset write permissions for group/other before repacking
 -ur    unset read/write permissions for group/other before repacking
 -u/-ua unset read/write/execute for group/other before repacking
@@ -25,6 +25,8 @@ Option is one of the following:
 -Ur    ignore previous -ur
 -U/-Ua ignore previous -u/-ua
 -r     rename directories rcs into RCS (requires mmv)
+-q     quiet
+-v     verbose
 --     last option
 All other options are passed to pd"
 	exit ${1:-1}
@@ -38,6 +40,8 @@ renrcs=false
 withparent=
 unpackx='-X'
 usetemp=:
+quiet=false
+verbose=false
 case ${0##*/} in
 *ppd*)	packopt='-A/RLW';;
 esac
@@ -56,13 +60,23 @@ do	case $1 in
 	-Uw)	uwrite=false;;
 	-tmp)	usetemp=false;;
 	-d)	withparent='-d';;
-	--)	shift; break;;
+	--)	shift
+		break;;
+	-q)	quiet=:;;
+	-v)	verbose=:;;
 	-*)	packopt="$packopt $1";;
 	*)	break;;
 	esac
 	shift
 done
 [ $# -ne 0 ] || Usage
+
+! ${quiet} || packopt="$packopt -q"
+unpackq=-q
+if ${verbose}
+then	packopt="$packopt -v"
+	unpackq=
+fi
 
 chmod=:
 if $uread || $uwrite || $uall
@@ -76,7 +90,7 @@ fi
 currd=$PWD || currd=
 case $currd in
 /*)	:;;
-*)	Fatal "cannot determine current directory"
+*)	Fatal 'cannot determine current directory';;
 esac
 
 Cd() {
@@ -130,7 +144,7 @@ do	test -d "$repack" || continue
 	tempdirname=$unpackp/$blank
 	test -r "$tempdirname" && Fatal "$tempdirname already exists"
 	Cd "$unpackp"
-	u -d $unpackx $unpackl -- "$repackp/$full" || \
+	u -d $unpackq $unpackx $unpackl -- "$repackp/$full" || \
 		Fatal "cannot unpack $repackp/$full"
 	Cd "$repackp"
 	$chmod -R -- "$chmodarg" "$tempdirname"

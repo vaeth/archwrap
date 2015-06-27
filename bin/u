@@ -14,21 +14,22 @@ Uncompress/view/test ARCHIVE. The following options are available:
 -l   list contents of ARCHIVE (non-verbose)
 -f   force overwrite, if directory ./ARCHIVE already exists
 -t   test integrity of ARCHIVE
--S   Use star instead of tar, ignore POORTAR, -p, -s, -P
--T   Use tar instead of star (default)
+-S   use star instead of tar, ignore POORTAR, -p, -s, -P
+-T   use tar instead of star (default)
 -E   break on error
 -j   junk pathnames (only for zip, arj, rar, 7z)
 -L   convert pathnames into lower case (only for .zip)
--a   Do not restore permission attributes (only for .tar)
--A   Do not restore extended attributes (set POORTAR=xattr for default)
+-a   do not restore permission attributes (only for .tar)
+-A   do not restore extended attributes (set POORTAR=xattr for default)
 -X   restore user id/group id (only for .zip and .tar) (default for root)
 -x   do not restore user id/group id
 -C   restore Access Control Lists (for star)
 -c   use careful mode (otherwise -no-fsync is used in star if possible)
 -n   use plain owner name instead of numerical value (only for .tar)
--p   Assume poor tar (no [gbl]zip|xz|xattr opts) (set POORTAR=1 for default)
--s   Assume semipoor tar (no lzip|xz|xattr opts) (set POORTAR=semi for default)
--P   Assume lzma tar (no xz|xattr opts) (set POORTAR=lzma for default)"
+-p   assume poor tar (no [gbl]zip|xz|xattr opts) (set POORTAR=1 for default)
+-s   assume semipoor tar (no lzip|xz|xattr opts) (set POORTAR=semi for default)
+-P   assume lzma tar (no xz|xattr opts) (set POORTAR=lzma for default)
+-q   quiet"
 	exit ${1:-1}
 }
 
@@ -49,13 +50,15 @@ errbreak=false
 lower=false
 toname=
 verbose=
+quiet=false
 case ${0##*/} in
 *ud*)	mdir=:;;
 *uv*)	show=:;;
 esac
 OPTIND=1
-while getopts 'd2:STflvtjaAXxcCnLpsPEhH?' opt
+while getopts 'qd2:STflvtjaAXxcCnLpsPEhH?' opt
 do	case $opt in
+	q)	quiet=:;;
 	d)	mdir=:;;
 	2)	mdir=:
 		toname=$OPTARG;;
@@ -90,6 +93,15 @@ then	if [ "`id -u`" -eq 0 ]
 	then	restowner=:
 	else	restowner=false
 	fi
+fi
+
+if $quiet
+then	verboseopt=
+	quietopt='-q'
+	redir='>/dev/null'
+else	verboseopt='-v'
+	quietopt=
+	redir=
 fi
 
 if $dotest
@@ -150,7 +162,7 @@ else	MakeExternal tarprg tar
 	$use_xattr && Push taropts '--xattrs'
 fi
 
-Push -c zipopts
+Push -c zipopts $quietopt
 $restowner && Push zipopts '-X'
 $lower && Push zipopts '-L'
 $junk && Push zipopts '-j'
@@ -295,7 +307,7 @@ tar)
 	case $mode in
 	u*)	IntoDir || return
 		eval "set -- $taropts"
-		"$tarprg" -x -v "$@" -f "$f" || MyErr;;
+		"$tarprg" -x $verboseopt "$@" -f "$f" || MyErr;;
 	s*)	"$tarprg" -t $verbose -f "$f" || MyErr;;
 	t*)	MyErrNot;;
 	esac;;
@@ -306,8 +318,8 @@ tar.gz)
 		eval "set -- $taropts"
 		if $verypoor
 		then	"$gzip" -d -c -- "$f" | \
-				"$tarprg" -x -v "$@" -f -
-		else	"$tarprg" -x -v $gzipflag "$@" -f "$f"
+				"$tarprg" -x $verboseopt "$@" -f -
+		else	"$tarprg" -x $verboseopt $gzipflag "$@" -f "$f"
 		fi;;
 	s*)	if $verypoor
 		then	"$gzip" -d -c -- "$f" | "$tarprg" -t $verbose -f -
@@ -322,8 +334,8 @@ tar.bz2)
 		eval "set -- $taropts"
 		if $verypoor
 		then	"$bzip" -d -k -c -- "$f" | \
-				"$tarprg" -x -v "$@" -f -
-		else	"$tarprg" -x -v $bzipflag "$@" -f "$f"
+				"$tarprg" -x $verboseopt "$@" -f -
+		else	"$tarprg" -x $verboseopt $bzipflag "$@" -f "$f"
 		fi;;
 	s*)	if $verypoor
 		then	"$bzip" -d -k -c -- "$f" | \
@@ -339,8 +351,8 @@ tar.lzma)
 		eval "set -- $taropts"
 		if $semipoor
 		then	"$lzma" -d -k -c -- "$f" | \
-				"$tarprg" -x -v "$@" -f -
-		else	"$tarprg" -x -v $lzmaflag "$@" -f "$f"
+				"$tarprg" -x $verboseopt "$@" -f -
+		else	"$tarprg" -x $verboseopt $lzmaflag "$@" -f "$f"
 		fi;;
 	s*)	if $semipoor
 		then	"$lzma" -d -k -c -- "$f" | \
@@ -356,8 +368,8 @@ tar.xz)
 		eval "set -- $taropts"
 		if $xzpoor
 		then	"$xz" -d -k -c -- "$f" | \
-				"$tarprg" -x -v "$@" -f -
-		else	"$tarprg" -x -v $xzflag "$@" -f "$f"
+				"$tarprg" -x $verboseopt "$@" -f -
+		else	"$tarprg" -x $verboseopt $xzflag "$@" -f "$f"
 		fi;;
 	s*)	if $xzpoor
 		then	"$xz" -d -k -c -- "$f" | \
@@ -373,7 +385,7 @@ tar.lrz)
 		eval "set -- $taropts"
 		MkTemp && \
 			"$lrzip" -d -o "$tempname" -- "$f" && \
-			"$tarprg" -x -v "$@" -f "$tempname" && \
+			"$tarprg" -x $verboseopt "$@" -f "$tempname" && \
 			RmTemp \
 			|| MyErr;;
 	s*)	MkTemp && \
@@ -388,7 +400,7 @@ tar.7z)
 	case $mode in
 	u*)	IntoDir || return
 		eval "set -- $taropts"
-		"$za" -so e -- "$f" | "$tarprg" -x -v "$@" -f -;;
+		"$za" -so e -- "$f" | "$tarprg" -x $verboseopt "$@" -f -;;
 	s*)	"$za" -so e -- "$f" | "$tarprg" -t $verbose -f -;;
 	t*)	"$za" t -- "$f";;
 	esac || MyErr;;
@@ -422,7 +434,7 @@ lzma)
 	OptExternal lzma
 	case $mode in
 	u*)	IntoDir || return
-		"$lzma" -d -k -v -- "$f" || MyErr;;
+		"$lzma" -d -k $verboseopt -- "$f" || MyErr;;
 	s*)	MyErrNot;;
 	t*)	"$lzma" -t -v -- "$f" || MyErr;;
 	esac;;
@@ -430,7 +442,7 @@ xz)
 	OptExternal xz
 	case $mode in
 	u*)	IntoDir || return
-		"$xz" -d -k -v -- "$f" || MyErr;;
+		"$xz" -d -k $verboseopt -- "$f" || MyErr;;
 	s*)	MyErrNot;;
 	t*)	"$xz" -t -v -- "$f" || MyErr;;
 	esac;;
@@ -473,7 +485,7 @@ arj)
 	u*)	IntoDir || return
 		x='x'
 		$junk && x='e'
-		"$unarj" $x -- "$f";;
+		eval '"$unarj" $x -- "$f"'" $redir";;
 	s*)	"$unarj" l -- "$f";;
 	t*)	"$unarj" t -- "$f";;
 	esac || MyErr;;
@@ -486,7 +498,7 @@ arj.gz)
 		$junk && x='e'
 		MkTemp && \
 			"$gzip" -d -c -- "$f" >"$tempname" && \
-			"$unarj" $x -- "$tempname" && \
+			eval '"$unarj" $x -- "$tempname"'" $redir" && \
 			RmTemp;;
 	s*)	MkTemp && \
 			"$gzip" -d -c -- "$f" >"$tempname" && \
@@ -504,7 +516,7 @@ lha)
 	u*)	IntoDir || return
 		x='-x'
 		$junk || x='-xi'
-		"$lha" $x -- "$f";;
+		eval '"$lha" $x -- "$f"'" $redir";;
 	s*)	"$lha" -v -- "$f";;
 	t*)	"$lha" -t -- "$f";;
 	esac || MyErr;;
@@ -514,7 +526,7 @@ rar)
 	u*)	IntoDir || return
 		x='x'
 		$junk && x='e'
-		"$unrar" $x -- "$f";;
+		"$unrar" ${quietopt:+-idq} $x -- "$f";;
 	s*)	x='l'
 		[ -n "${verbose:++}" ] && x='vt'
 		"$unrar" $x -- "$f";;

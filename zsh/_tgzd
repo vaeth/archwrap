@@ -25,4 +25,5 @@ _arguments -s -S -A '-*' : \
 '-p[Use poor tar (no compress pipe, xattr) (set POORTAR=1 for default)]' \
 '-s[Do not use the sparse option for tar (this is implied by -p)]' \
 '-P[Do not use poor tar]' \
+'-q[Be quiet]' \
 '*:directory:_files -/'

@@ -12,7 +12,8 @@ options:
 -k: dos compatibility
 -d: Pack also (parent) directory into archive, not only its content
 -D: Pack (parent) directory as "." into archive, not only its content
--E: Break on error"
+-E: Break on error
+-q: Quiet"
 	exit ${1:-1}
 }
 Push -c zipopts '-9' '-r'
@@ -21,8 +22,9 @@ withparent=false
 dotparent=false
 errbreak=false
 compat=false
+quiet=false
 OPTIND=1
-while getopts 'FfdDkEhH?' opt
+while getopts 'FfdDkEqhH?' opt
 do	case $opt in
 	F)	symlink=:;;
 	d)	withparent=:
@@ -32,6 +34,7 @@ do	case $opt in
 	k)	compat=:;;
 	E)	errbreak=:;;
 	f)	symlink=false;;
+	q)	quiet=:;;
 	*)	Usage 0;;
 	esac
 done
@@ -40,6 +43,7 @@ shift $(( $OPTIND - 1 ))
 
 $symlink && Push zipopts '-y'
 $compat  && Push zipopts '-k'
+! $quiet || Push zipopts '-q'
 
 MakeExternal zip zip
 
@@ -60,7 +64,7 @@ do	stat=0
 	else	zipfile=$zipfile.zip
 	fi
 	if test -r "$zipfile"
-	then	Echo "removing old $zipfile"
+	then	$quiet || Echo "removing old $zipfile"
 		rm -f -- "$zipfile"
 	fi
 	if $withparent
