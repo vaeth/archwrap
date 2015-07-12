@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
-
+set -u
 case ${0##*/} in
 *xz*)	xzmode=:;;
 *lz*)	xzmode=false;;

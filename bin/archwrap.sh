@@ -72,9 +72,8 @@ MkTemp() {
 		return 2
 	fi
 	if [ -z "${have_random:++}" ]
-	then	r=$RANDOM
-		if [ "$r" = "$RANDOM" ] && \
-			[ "$r" = "$RANDOM" ]
+	then	r=${RANDOM-}
+		if [ "$r" = "${RANDOM-}" ] && [ "$r" = "${RANDOM-}" ]
 		then	have_random=false
 			r=`od -d -N2 /dev/random 2>/dev/null` || r=
 			r=`printf '%s' $r`
