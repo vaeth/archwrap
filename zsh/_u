@@ -23,4 +23,4 @@ _arguments -s -S -A '-*' : \
 '-s[assume semipoor tar (no lzip|xz|xattr opts) (POORTAR=semi for default)]' \
 '-P[assume lzma tar (no xz|xattr opts) (POORTAR=lzma for default)]' \
 '-q[quiet]' \
-'*:archives:_files -g "*.(tar|TAR|z|bz2|bz|tbz2|tbz|gz|tgz|taz|dir|7z|t7z|lz|lzm|lzma|xz|tlz|txz|lrz|tlr|tlrz|lha|lzh|arj|arz|zip|jar|apk|okular|rar|Z|BZ2|BZ|TBZ2|TBZ|GZ|TGZ|TAZ|DIR|7Z|T7Z|LZ|LZM|LZMA|XZ|TLZ|TXZ|LRZ|TLR|TLRZ|LHA|LZH|ARJ|ARZ|ZIP|JAR|APK|OKULAR|RAR)(-.)"'
+'*:archives:_files -g "*.(tar|TAR|z|bz2|bz|tbz2|tbz|gz|tgz|taz|dir|7z|t7z|lz|lzm|lzma|xz|tlz|txz|lrz|tlr|tlrz|lha|lzh|arj|arz|zip|jar|xpi|apk|okular|rar|Z|BZ2|BZ|TBZ2|TBZ|GZ|TGZ|TAZ|DIR|7Z|T7Z|LZ|LZM|LZMA|XZ|TLZ|TXZ|LRZ|TLR|TLRZ|LHA|LZH|ARJ|ARZ|ZIP|JAR|XPI|APK|OKULAR|RAR)(-.)"'
