@@ -44,7 +44,7 @@ Remove() {
 	xz_opt=$n
 }
 
-xz_opt=$XZ_OPT
+xz_opt=${XZ_OPT-}
 if [ -z "${xz_opt:++}" ]
 then	CalcXz
 else	Remove '--extreme'
