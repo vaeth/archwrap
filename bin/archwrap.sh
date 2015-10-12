@@ -27,9 +27,11 @@ Error() {
 	[ "$1" -gt "$retvalue" ] && retvalue=$1
 	shift
 	case $* in
-	*'.')	e=' ';;
+	*'.')
+		e=' ';;
 	*' '|*'
-')	e=;;
+')
+		e=;;
 	esac
 	if $errbreak
 	then	ErrMessage "$*$eStopped."
@@ -109,8 +111,11 @@ MkTemp() {
 
 Cd() {
 	case $1 in
-	/*)	cd "$1" >/dev/null 2>&1 || Error 2 "cd $1 failed";;
-	*)	cd "./${1#./}" >/dev/null 2>&1 || Error 2 "cd $PWD/${1./} failed";;
+	/*)
+		cd "$1" >/dev/null 2>&1 || Error 2 "cd $1 failed";;
+	*)
+		cd "./${1#./}" >/dev/null 2>&1 \
+			|| Error 2 "cd $PWD/${1#./} failed";;
 	esac
 }
 
@@ -119,7 +124,8 @@ PushTopack() {
 	set +f
 	for topacki in .* *
 	do	case $topacki in
-		.|..)	continue;;
+		.|..)
+			continue;;
 		esac
 		test -r "$topacki" && Push topack "$topacki"
 	done

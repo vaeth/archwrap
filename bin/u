@@ -216,8 +216,7 @@ IntoDir() {
 	else	[ -n "${umask:++}" ] || umask=`umask -S`
 		mkdir -m "$umask" -- "$d" >/dev/null
 	fi
-	Cd "$d"
-	cddone=:
+	Cd "$d" && cddone=:
 }
 
 MyErr() {
