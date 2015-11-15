@@ -7,20 +7,19 @@ _arguments -s -S -A '-*' : \
 '-l[list contents of ARCHIVE (non-verbose)]' \
 '-f[force overwrite, if directory ./ARCHIVE already exists]' \
 '-t[test integrity of ARCHIVE]' \
-'-S[use star instead of tar, ignore POORTAR, -p, -s, -P]' \
+'-S[use star instead of tar]' \
 '-T[use tar instead of star (default)]' \
 '-E[break on error]' \
 '-j[junk pathnames (only for zip, arj, rar, 7z)]' \
 '-L[convert pathnames into lower case (only for .zip)]' \
-'-a[do not restore permission attributes (only for .tar)]' \
-'-A[do not restore extended attributes (POORTAR=xattr for default)]' \
-'-X[restore user id/group id (only for .zip and .tar) (default for root)]' \
+'-a[do not restore permission attributes (for .tar)]' \
+'-A[do not restore extended attributes]' \
+'-X[restore user id/group id (for .zip and .tar)]' \
 '-x[do not restore user id/group id]' \
-'-C[restore Access Control Lists (for star)]' \
-'-c[use careful mode (otherwise -no-fsync is used in star if possible)]' \
-'-n[use plain owner name instead of numerical value (only for .tar)]' \
-'-p[assume poor tar (no \[gbl\]zip|xz|xattr opts) (POORTAR=1 for default)]' \
-'-s[assume semipoor tar (no lzip|xz|xattr opts) (POORTAR=semi for default)]' \
-'-P[assume lzma tar (no xz|xattr opts) (POORTAR=lzma for default)]' \
+'-C[restore ACLs (for star)]' \
+'-c[be careful - do not use star with -no-fsync]' \
+'-n[do not use numerical owner value (for .tar)]' \
+'-p[ignore GNUTARVERSION]' \
+'-P[print output for GNUTARVERSION]' \
 '-q[quiet]' \
 '*:archives:_files -g "*.(tar|TAR|z|bz2|bz|tbz2|tbz|gz|tgz|taz|dir|7z|t7z|lz|lzm|lzma|xz|tlz|txz|lrz|tlr|tlrz|lha|lzh|arj|arz|zip|jar|xpi|apk|okular|rar|Z|BZ2|BZ|TBZ2|TBZ|GZ|TGZ|TAZ|DIR|7Z|T7Z|LZ|LZM|LZMA|XZ|TLZ|TXZ|LRZ|TLR|TLRZ|LHA|LZH|ARJ|ARZ|ZIP|JAR|XPI|APK|OKULAR|RAR)(-.)"'

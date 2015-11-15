@@ -132,3 +132,100 @@ PushTopack() {
 	set -f
 	[ -n "${topack:++}" ]
 }
+
+CalcGnuTarVersion() {
+	OptExternal tarprg tar
+	[ -n "${GNUTARVERSION++}" ] || \
+		GNUTARVERSION=`"$tarprg" --version 2>/dev/null` \
+		|| GNUTARVERSION=
+	GNUTARVERSION=${GNUTARVERSION%%'
+'*}
+	GNUTARVERSION=${GNUTARVERSION##*' '}
+}
+
+CalcStarHasNoFsync() {
+	[ -z "${STAR_HAS_NOFSYNC++}" ] || case ${STAR_HAS_NOFSYNC} in
+	''|[nNfF0]*)
+		STAR_HAS_NOFSYNC=false
+		return;;
+	esac || {
+		STAR_HAS_NOFSYNC=:
+		return
+	}
+	OptExternal tarprg star
+	if "$tarprg" -c -no-fsync >/dev/null 2>&1
+	then	STAR_HAS_NO_FSYNC=:
+	else	STAR_HAS_NO_FSYNC=false
+	fi
+}
+
+SetTarPrg() {
+	tar_knows_sparse=:
+	tar_needs_errfile=false
+	tar_knows_use_compress_program=:
+	tar_knows_gzip=:
+	tar_knows_bzip=:
+	tar_knows_lzma=false
+	tar_knows_xz=false
+	tar_knows_numeric_owner=:
+	tar_knows_xattr=false
+	tar_knows_no_auto_compress=false
+	tar_knows_sort=false
+	if $use_star
+	then	MakeExternal tarprg star
+		CalcStarHasNoFsync
+		tar_knows_sparse=false
+		tar_knows_use_compress_program=false
+		tar_knows_xattr=:
+		return
+	fi
+	MakeExternal tarprg tar
+	CalcGnuTarVersion
+# X >= 1.28: --sort=names
+# X >= 1.27: --xattr
+# X >= 1.22: --xz
+# X >= 1.21: --no-auto-compress
+# X >= 1.20: --lzma
+# X >= 1.13.6: --bzip2
+# X >= 1.12: --numeric-owner
+# X >= 1.11.2: --gzip
+	case " $GNUTARVERSION" in
+	' ')
+		tar_needs_errfile=:
+		tar_knows_sparse=false
+		tar_knows_use_compress_program=false
+		tar_knows_numeric_owner=false
+		tar_knows_gzip=false;;
+	*' 0.'*|*' 1.0'*|*' 1.10'*|*' 1.11'|*' 1.11.'[01]*)
+		tar_knows_use_compress_program=false
+		tar_knows_numeric_owner=false
+		tar_knows_gzip=false;;
+	*' 1.1'[0-1]|*' 1.1'[0-1]'.'*)
+		tar_knows_numeric_owner=false
+		tar_knows_bzip=false;;
+	*' 1.1'[23]|*' 1.1'3.[0-5]*)
+		tar_knows_bzip=false;;
+	*' 1.1'*)
+		:;;
+	*' 1.20')
+		tar_knows_lzma=:;;
+	*' 1.21')
+		tar_knows_lzma=:
+		tar_knows_no_auto_compress=:;;
+	*' 1.2'[2-6])
+		tar_knows_lzma=:
+		tar_knows_no_auto_compress=:
+		tar_knows_xz=:;;
+	*' 1.27'|*' 1.27.'*)
+		tar_knows_lzma=:
+		tar_knows_no_auto_compress=:
+		tar_knows_xz=:
+		tar_knows_xattr=:;;
+	*)
+		tar_knows_lzma=:
+		tar_knows_no_auto_compress=:
+		tar_knows_xz=:
+		tar_knows_xattr=:
+		tar_knows_sort=:;;
+	esac
+}

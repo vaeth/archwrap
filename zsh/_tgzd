@@ -1,29 +1,28 @@
 #compdef 7zd bzipd gzipd lrzd lzmad t7zd tard tbzd tgzd tlrd tlzd txzd xzd
 _arguments -s -S -A '-*' : \
 '(* -)'{'-h','-H','-\\?'}'[help]' \
-'-R+[Store output in PATH. Use e.g. -R - for piping to standard output]:output-path:_files -/' \
-'-g[Use gzip (archivename is ./zipdir.tgz or ./zipdir.tar.gz)]' \
-'-b[Use bzip2 (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)]' \
-'-l[Use lzma (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)]' \
-'-L[Use xz (archivename is ./zipdir.txz or ./zipdir.tar.xz)]' \
-'-7[Use 7z (archivename is ./zipdir.t7z or ./zipdir.tar.7z)]' \
-'-r[Use lrzip (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)]' \
-'-t[Use Tar only (archivename is ./zipdir.tar)]' \
-'-X[Use long names (.tar.gz instead of .tgz etc)]' \
-'-x[Use short names (.tgz instead of .tar.gz etc)]' \
-'-A[Do not store extended attributes (set POORTAR=xattr for default)]' \
-'-S[Use star instead of tar, ignore POORTAR, -p, -P]' \
-'-T[Use tar instead of star (default)]' \
-'-C[Store as much as possible (Access Control Lists, creation time...)]' \
-'-c[Use secure mode (otherwise -no-fsync is used in star if possible)]' \
-'-F[Symbolic links are stored as such (default)]' \
-'-f[Symbolic links are stored as files]' \
-'-E[Break on error]' \
-'-d[Pack also (parent) directory into archive, not only its content]' \
-'-D[Pack (parent) directory as "." into archive, not only its content]' \
-'-n[Store plain owner name]' \
-'-p[Use poor tar (no compress pipe, xattr) (set POORTAR=1 for default)]' \
-'-s[Do not use the sparse option for tar (this is implied by -p)]' \
-'-P[Do not use poor tar]' \
-'-q[Be quiet]' \
+'-R+[store output in PATH; use e.g. -R - for piping to stdout]:output-path:_files -/' \
+'-g[use gzip (appendix .tgz or .tar.gz)]' \
+'-b[use bzip2 (appendix .tbz or .tar.bz2)]' \
+'-l[use lzma (appendix .tlz or .tar.lzma)]' \
+'-L[use xz (appendix .txz or .tar.xz)]' \
+'-7[use 7z (appendix .t7z or .tar.7z)]' \
+'-r[use lrzip (appendix .tlr or .tar.lrz)]' \
+'-t[use Tar (appendix .tar)]' \
+'-X[use long names (appendix .tar.gz over .tgz)]' \
+'-x[use short names (appendix .tgz over .tar.gz)]' \
+'-A[do not store extended attributes]' \
+'-S[use star instead of tar]' \
+'-T[use tar instead of star (default)]' \
+'-C[store all (ACLs, time...)]' \
+'-c[be careful - do not use star with -no-fsync]' \
+'-F[symbolic links are stored as such (default)]' \
+'-f[symbolic links are stored as files]' \
+'-E[break on error]' \
+'-d[pack also (parent) directory into archive, not only its content]' \
+'-D[pack (parent) directory as "." into archive, not only its content]' \
+'-n[store plain owner name]' \
+'-p[ignore GNUTARVERSION]' \
+'-P[print output for GNUTARVERSION]' \
+'-q[be quiet]' \
 '*:directory:_files -/'

@@ -8,39 +8,37 @@ set -f
 Usage() {
 	Echo "Usage: ${0##*/} [options] [path/]zipdir[/][.tgz]
 Create archive ./zipdir.tgz with contents of zipdir
- -@ path  Store output in path/zipdir.tgz
-          The typical call is -@ user@machine: or -@ user@mach:/tmp/
-          to use remote connection via rsh (GNU tar) resp. ssh (star)
- -R PATH  Store output in PATH. Use e.g. -R - for piping to standard output
- -g: Use gzip     (archivename is ./zipdir.tgz or ./zipdir.tar.gz)
- -b: Use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)
- -l: Use lzma     (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)
- -L: Use xz       (archivename is ./zipdir.txz or ./zipdir.tar.xz)
- -7: Use 7z       (archivename is ./zipdir.t7z or ./zipdir.tar.7z)
- -r: Use lrzip    (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)
- -t: Use Tar only (archivename is ./zipdir.tar)
- -X: Use long names (.tar.gz instead of .tgz etc)
- -x: Use short names (.tgz instead of .tar.gz etc)
- -S: Use star instead of tar, ignore POORTAR, -p, -P
- -T: Use tar instead of star (default)
- -A: Do not store extended attributes (set POORTAR=xattr or semi for default)
- -C: Store as much as possible (Access Control Lists, creation time...)
- -c: Use secure mode (otherwise -no-fsync is used in star if possible)
- -F: Symbolic links are stored as such (default)
- -f: Symbolic links are stored as files
- -E: Break on error
- -d: Pack also (parent) directory into archive, not only its content
- -D: Pack (parent) directory as \".\" into archive, not only its content
- -n: Store plain owner name
- -p: Use poor tar (no compress pipe, xattr) (set POORTAR=1 for default)
- -s: Do not use the sparse option for tar (this is implied by -p)
- -P: Do not use poor tar
- -q: Be quiet"
+-@ path  store output in path/zipdir.tgz
+         The typical call is -@ user@machine: or -@ user@mach:/tmp/
+         to use remote connection via rsh (GNU tar) resp. ssh (star)
+-R PATH  store output in PATH; use e.g. -R - for piping to stdout
+-g use gzip     (archivename is ./zipdir.tgz or ./zipdir.tar.gz)
+-b use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)
+-l use lzma     (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)
+-L use xz       (archivename is ./zipdir.txz or ./zipdir.tar.xz)
+-7 use 7z       (archivename is ./zipdir.t7z or ./zipdir.tar.7z)
+-r use lrzip    (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)
+-t use Tar only (archivename is ./zipdir.tar)
+-X use long names (.tar.gz instead of .tgz etc)
+-x use short names (.tgz instead of .tar.gz etc)
+-S use star instead of tar, ignore GNUTARVERSION
+-T use tar instead of star (default)
+-A do not store extended attributes (forced if unsupported by tar)
+-C store as much as possible (Access Control Lists, creation time...)
+-c be careful - avoid star -no-fsync; same as STAR_HAS_NOFSYNC=false
+-F symbolic links are stored as such (default)
+-f symbolic links are stored as files
+-E break on error
+-d pack also (parent) directory into archive, not only its content
+-D pack (parent) directory as \".\" into archive, not only its content
+-n store plain owner name
+-p ignore GNUTARVERSION and STAR_HAS_NOFSYNC environment variables
+-P print output appropriate for setting GNUTARVERSION and exit
+-q be quiet"
 	exit ${1:-1}
 }
 
 use_star=false
-# command -v star >/dev/null 2>&1 && use_star=:
 xattr=:
 follow=false
 control=false
@@ -49,11 +47,11 @@ dotparent=false
 xnames=false
 ownernum=:
 sparse=:
-secmode=false
 remote=
 errbreak=false
 comp='g'
 quiet=false
+calc_version_only=false
 case ${0##*/} in
 *lzma*|*.*lz*)
 	comp='l'
@@ -96,7 +94,7 @@ do	case $opt in
 	F)	follow=false;;
 	S)	use_star=:;;
 	T)	use_star=false;;
-	c)	secmode=:;;
+	c)	STAR_HAS_NOFSYNC=;;
 	C)	control=:;;
 	E)	errbreak=:;;
 	f)	follow=:;;
@@ -106,8 +104,8 @@ do	case $opt in
 		dotparent=false;;
 	n)	ownernum=;;
 	t)	comp=;;
-	p)	unset POORTAR;;
-	P)	POORTAR=1;;
+	p)	unset GNUTARVERSION STAR_HAS_NOFSYNC;;
+	P)	calc_version_only=:;;
 	s)	sparse=;;
 	b)	comp=b;;
 	g)	comp=g;;
@@ -125,6 +123,13 @@ do	case $opt in
 	esac
 done
 shift $(( $OPTIND - 1 ))
+
+if $calc_version_only
+then	tarprg=
+	CalcGnuTarVersion && printf '%s' "$GNUTARVERSION"
+	exit
+fi
+
 [ $# -ne 0 ] || Usage
 
 if [ -n "${remote:++}" ]
@@ -132,57 +137,43 @@ then	export RSH
 	[ -n "${RSH:++}" ] || RSH=`command -v ssh 2>/dev/null`
 fi
 
+SetTarPrg
 Push -c taropts '-c'
 $quiet  || Push taropts '-v'
 $follow && Push taropts '-h'
 
-$use_star && unset POORTAR
-poortar=:
-case ${POORTAR:-n} in
-[nNfF0lL]*)
-	poortar=false;;
-[xXsS]*)
-	xattr=false
-	poortar=false;;
-esac
-$poortar && xattr=false
+tarcomp=:
 errfile=false
 if $use_star
-then	tarprg='star'
-	Push taropts '-H=exustar'
+then	Push taropts '-H=exustar'
 	# Push taropts '-H=pax'
 	$xattr && Push taropts '-xattr'
 	$control && Push taropts '-acl' '-xfflags'
 	#Push taropts "-dirmode"
 	$ownernum && Push taropts '-numeric'
 	$sparse && Push taropts '-sparse'
+	$STAR_HAS_NOFSYNC && Push taropts '-no-fsync'
 	case $comp in
 	g)	Push taropts '-z'
 		export STAR_COMPRESS_FLAG='--best';;
 	b)	Push taropts '-bz'
 		export STAR_COMPRESS_FLAG='-9';;
-	[7lr])	poortar=:;;
+	[xlr7])	tarcomp=false;;
 	esac
-	if ! $secmode
-	then	"$tarprg" -c -no-fsync >/dev/null 2>&1 && \
-			Push taropts '-no-fsync'
-	fi
-else	MakeExternal tarprg tar
-	$xattr && Push taropts '--xattrs'
-	$ownernum && Push taropts '--numeric-owner'
-	case $comp in
-	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
+else	$tar_knows_xattr && $xattr && Push taropts '--xattrs'
+	$tar_knows_numeric_owner && $ownernum && Push taropts '--numeric-owner'
+	$tar_knows_sort && Push taropts '--sort=name'
+	$tar_knows_sparse && Push taropts '-S'
+	$tar_knows_use_compress_program && case $comp in
+	x)	Push taropts '--use-compress-program' "${0%/*}/xzbest";;
 	b)	Push taropts '--use-compress-program' "${0%/*}/bzipbest";;
+	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
 	7)	Push taropts '--use-compress-program' "${0%/*}/7zbest";;
 	l)	Push taropts '--use-compress-program' "${0%/*}/lzmabest";;
-	x)	Push taropts '--use-compress-program' "${0%/*}/xzbest";;
-	r)	poortar=:;;
+	r)	tarcomp=false;;
 	esac
-	if $poortar
-	then	errfile=:
-	else	$sparse && Push taropts '-S'
-	fi
 fi
+$tarcomp || ! $tar_needs_errfile || errfile=:
 if $xnames
 then	case $comp in
 	g)	ext='tar.gz';;
@@ -286,7 +277,7 @@ DoDir() {
 	name=${dirname##*/}
 	: ${name:=_}
 	eval "set -- $taropts"
-	if ! $poortar
+	if $tarcomp
 	then	Tarit "$ext" "$@"
 		return
 	fi

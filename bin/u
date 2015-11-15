@@ -8,34 +8,32 @@ set -f
 Usage() {
 	Echo "Usage: ${0##*/} [options] [path/]ARCHIVE[.ext]
 Uncompress/view/test ARCHIVE. The following options are available:
--d     uncompress into new directory ./ARCHIVE instead of .
--2 DIR uncompress into new directory ./DIR instead of .
--v   view contents of ARCHIVE (verbose)
--l   list contents of ARCHIVE (non-verbose)
--f   force overwrite, if directory ./ARCHIVE already exists
--t   test integrity of ARCHIVE
--S   use star instead of tar, ignore POORTAR, -p, -s, -P
--T   use tar instead of star (default)
--E   break on error
--j   junk pathnames (only for zip, arj, rar, 7z)
--L   convert pathnames into lower case (only for .zip)
--a   do not restore permission attributes (only for .tar)
--A   do not restore extended attributes (set POORTAR=xattr for default)
--X   restore user id/group id (only for .zip and .tar) (default for root)
--x   do not restore user id/group id
--C   restore Access Control Lists (for star)
--c   use careful mode (otherwise -no-fsync is used in star if possible)
--n   use plain owner name instead of numerical value (only for .tar)
--p   assume poor tar (no [gbl]zip|xz|xattr opts) (set POORTAR=1 for default)
--s   assume semipoor tar (no lzip|xz|xattr opts) (set POORTAR=semi for default)
--P   assume lzma tar (no xz|xattr opts) (set POORTAR=lzma for default)
--q   quiet"
+-d uncompress into new directory ./ARCHIVE instead of .
+-2DIR uncompress into new directory ./DIR instead of .
+-v view contents of ARCHIVE (verbose)
+-l list contents of ARCHIVE (non-verbose)
+-f force overwrite, if directory ./ARCHIVE already exists
+-t test integrity of ARCHIVE
+-s use star instead of tar, ignore GNUTARVERSION
+-T use tar instead of star (default)
+-E break on error
+-j junk pathnames (only for zip, arj, rar, 7z)
+-L convert pathnames into lower case (only for .zip)
+-a do not restore permission attributes (only for .tar)
+-A do not restore extended attributes (forced if unsupported by tar)
+-X restore user id/group id (only for .zip and .tar) (default for root)
+-x do not restore user id/group id
+-C restore Access Control Lists (for star)
+-c be careful - avoid star -no-fsync; same as STAR_HAS_NOFSYNC=false
+-n use plain owner name instead of numerical value (only for .tar)
+-p ignore GNUTARVERSION and STAR_HAS_NOFSYNC environment variables
+-P print output appropriate for setting GNUTARVERSION and exit
+-q quiet"
 	exit ${1:-1}
 }
 
 restowner=
 use_star=false
-# command -v star >/dev/null 2>&1 && use_star=:
 mdir=false
 show=false
 force=false
@@ -51,12 +49,13 @@ lower=false
 toname=
 verbose=
 quiet=false
+calc_version_only=false
 case ${0##*/} in
 *ud*)	mdir=:;;
 *uv*)	show=:;;
 esac
 OPTIND=1
-while getopts 'qd2:STflvtjaAXxcCnLpsPEhH?' opt
+while getopts 'qd2:STflvtjaAXxcCnLpPEhH?' opt
 do	case $opt in
 	q)	quiet=:;;
 	d)	mdir=:;;
@@ -78,14 +77,20 @@ do	case $opt in
 	C)	use_acl=:;;
 	n)	ownernum=false;;
 	L)	lower=:;;
-	p)	POORTAR=1;;
-	s)	POORTAR=semi;;
-	P)	POORTAR=lzma;;
+	p)	unset GNUTARVERSION STAR_HAS_NOFSYNC;;
+	P)	calc_version_only=:;;
 	E)	errbreak=:;;
 	*)	Usage 0;;
 	esac
 done
 shift $(( $OPTIND - 1 ))
+
+if $calc_version_only
+then	tarprg=
+	CalcGnuTarVersion && printf '%s' "$GNUTARVERSION"
+	exit
+fi
+
 [ $# -ne 0 ] || Usage
 
 if [ -z "$restowner" ]
@@ -112,54 +117,28 @@ then	mode='showing'
 else	mode='unpacking'
 fi
 
-$use_star && unset POORTAR
-case ${POORTAR:-n} in
-[nNfF0]*)
-	verypoor=false
-	semipoor=false
-	xzpoor=false;;
-[lL]*)
-	verypoor=false
-	semipoor=false
-	xzpoor=:;;
-[sS]*)
-	verypoor=false
-	semipoor=:;;
-[xX]*)
-	use_xattr=false;;
-*)
-	verypoor=:;;
-esac
-$verypoor && semipoor=:
-$semipoor && xzpoor=:
-$xzpoor && use_xattr=false
-
+SetTarPrg
 Push -c taropts
 $preserve && Push taropts '-p'
 if $use_star
-then	tarprg='star'
-	gzipflag='-z'
+then	gzipflag='-z'
 	bzipflag='-bz'
-	semipoor=:
 	$use_acl && Push taropts '-acl'
 	$ownernum && Push taropts '-numeric'
 	$restowner || Push taropts '-o'
 	if ! $caremode
-	then	star -c -no-fsync >/dev/null 2>&1 && Push taropts '-no-fsync'
+	then	"$tarprg" -c -no-fsync >/dev/null 2>&1 && Push taropts '-no-fsync'
 	fi
-	$use_xattr && Push taropts '-xattr'
-else	MakeExternal tarprg tar
-	gzipflag='-z'
-	bzipflag='-j'
-	xzflag='-J'
-	if $xzpoor
-	then	lzmaflag='--lzma'
-	else	lzmaflag=$xzflag
-		Push taropts '--no-auto-compress'
-	fi
-	$ownernum && Push taropts '--numeric-owner'
+	! $use_xattr || Push taropts '-xattr'
+else	gzipflag='--gzip'
+	bzipflag='--bzip2'
+	xzflag='--xz'
+	lzmaflag='--lzma'
+	taruse='--use-compress-program'
+	! $tar_knows_no_auto_compress || Push taropts '--no-auto-compress'
+	$tar_knows_numeric_owner && $ownernum && Push taropts '--numeric-owner'
 	$restowner && Push taropts '--same-owner'
-	$use_xattr && Push taropts '--xattrs'
+	$tar_knows_xattr && $use_xattr && Push taropts '--xattrs'
 fi
 
 Push -c zipopts $quietopt
@@ -315,14 +294,18 @@ tar.gz)
 	case $mode in
 	u*)	IntoDir || return
 		eval "set -- $taropts"
-		if $verypoor
-		then	"$gzip" -d -c -- "$f" | \
+		if $tar_knows_gzip
+		then	"$tarprg" -x $verboseopt $gzipflag "$@" -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -x $verboseopt $taruse "$gzip" "$@" -f "$f"
+		else	"$gzip" -d -c -- "$f" | \
 				"$tarprg" -x $verboseopt "$@" -f -
-		else	"$tarprg" -x $verboseopt $gzipflag "$@" -f "$f"
 		fi;;
-	s*)	if $verypoor
-		then	"$gzip" -d -c -- "$f" | "$tarprg" -t $verbose -f -
-		else	"$tarprg" -t $verbose $gzipflag -f "$f"
+	s*)	if $tar_knows_gzip
+		then	"$tarprg" -t $verbose $gzipflag -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -t $verbose $taruse "$gzip" -f "$f"
+		else	"$gzip" -d -c -- "$f" | "$tarprg" -t $verbose -f -
 		fi;;
 	t*)	"$gzip" -t -v -- "$f";;
 	esac || MyErr;;
@@ -331,15 +314,19 @@ tar.bz2)
 	case $mode in
 	u*)	IntoDir || return
 		eval "set -- $taropts"
-		if $verypoor
-		then	"$bzip" -d -k -c -- "$f" | \
+		if $tar_knows_bzip
+		then	"$tarprg" -x $verboseopt $bzipflag "$@" -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -x $verboseopt $taruse "$bzip" "$@" -f "$f"
+		else	"$bzip" -d -k -c -- "$f" | \
 				"$tarprg" -x $verboseopt "$@" -f -
-		else	"$tarprg" -x $verboseopt $bzipflag "$@" -f "$f"
 		fi;;
-	s*)	if $verypoor
-		then	"$bzip" -d -k -c -- "$f" | \
+	s*)	if $tar_knows_bzip
+		then	"$tarprg" -t $verbose $bzipflag -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -t $verbose $taruse "$bzip" -f "$f"
+		else	"$bzip" -d -k -c -- "$f" | \
 				"$tarprg" -t $verbose -f -
-		else	"$tarprg" -t $verbose $bzipflag -f "$f"
 		fi;;
 	t*)	"$bzip" -t -v -- "$f";;
 	esac || MyErr;;
@@ -348,15 +335,19 @@ tar.lzma)
 	case $mode in
 	u*)	IntoDir || return
 		eval "set -- $taropts"
-		if $semipoor
-		then	"$lzma" -d -k -c -- "$f" | \
+		if $tar_knows_lzma
+		then	"$tarprg" -x $verboseopt $lzmaflag "$@" -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -x $verboseopt $taruse "$lzma" "$@" -f "$f"
+		else	"$lzma" -d -k -c -- "$f" | \
 				"$tarprg" -x $verboseopt "$@" -f -
-		else	"$tarprg" -x $verboseopt $lzmaflag "$@" -f "$f"
 		fi;;
-	s*)	if $semipoor
-		then	"$lzma" -d -k -c -- "$f" | \
+	s*)	if $tar_knows_lzma
+		then	"$tarprg" -t $verbose $lzmaflag -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -t $verbose $taruse "$lzma" -f "$f"
+		else	"$lzma" -d -k -c -- "$f" | \
 				"$tarprg" -t $verbose -f -
-		else	"$tarprg" -t $verbose $lzmaflag -f "$f"
 		fi;;
 	t*)	"$lzma" -t -v -- "$f";;
 	esac || MyErr;;
@@ -365,15 +356,19 @@ tar.xz)
 	case $mode in
 	u*)	IntoDir || return
 		eval "set -- $taropts"
-		if $xzpoor
-		then	"$xz" -d -k -c -- "$f" | \
+		if $tar_knows_xz
+		then	"$tarprg" -x $verboseopt $xzflag "$@" -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -x $verboseopt $taruse "$xz" "$@" -f "$f"
+		else	"$xz" -d -k -c -- "$f" | \
 				"$tarprg" -x $verboseopt "$@" -f -
-		else	"$tarprg" -x $verboseopt $xzflag "$@" -f "$f"
 		fi;;
-	s*)	if $xzpoor
-		then	"$xz" -d -k -c -- "$f" | \
+	s*)	if $tar_knows_xz
+		then	"$tarprg" -t $verbose $xzflag -f "$f"
+		elif $tar_knows_use_compress_program
+		then	"$tarprg" -t $verbose $taruse "$xz" -f "$f"
+		else	"$xz" -d -k -c -- "$f" | \
 				"$tarprg" -t $verbose -f -
-		else	"$tarprg" -t $verbose $xzflag -f "$f"
 		fi;;
 	t*)	"$xz" -t -v -- "$f";;
 	esac || MyErr;;
