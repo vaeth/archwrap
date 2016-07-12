@@ -28,9 +28,9 @@ done
 shift $(( $OPTIND - 1 ))
 desthost=${1%%:*}
 destfile=${1#*:}
-[ "$desthost" = "$1" ] || [ -z "${destfile:++}" ] && Usage 1
+[ x"$desthost" = x"$1" ] || [ -z "${destfile:++}" ] && Usage 1
 shift
 Push -c quotefile "$destfile"
 Push -c quotecmd "cat - $redirect$quotefile"
 MakeExternal s ssh
-exec "$s" "$@" "$desthost" "sh -c $quotecmd"
+exec "$s" ${1+"$@"} "$desthost" "sh -c $quotecmd"

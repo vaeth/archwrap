@@ -4,7 +4,7 @@
 
 which=`command -v which` || which=
 MakeExternal() {
-	[ "$which" = 'which' ] && eval $1=\`which $2\` \
+	[ x"$which" = x'which' ] && eval $1=\`which $2\` \
 		|| eval $1=\`command -v $2\` || eval $1=
 	eval ": \${$1:=$2}"
 }
@@ -24,7 +24,7 @@ ErrMessage() {
 retvalue=0
 Error() {
 	e='. '
-	[ "$1" -gt "$retvalue" ] && retvalue=$1
+	[ $1 -gt $retvalue ] && retvalue=$1
 	shift
 	case $* in
 	*'.')
@@ -75,7 +75,7 @@ MkTemp() {
 	fi
 	if [ -z "${have_random:++}" ]
 	then	r=${RANDOM-}
-		if [ "$r" = "${RANDOM-}" ] && [ "$r" = "${RANDOM-}" ]
+		if [ x"$r" = x"${RANDOM-}" ] && [ x"$r" = x"${RANDOM-}" ]
 		then	have_random=false
 			r=`od -d -N2 /dev/random 2>/dev/null` || r=
 			r=`printf '%s' $r`

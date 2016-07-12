@@ -2,6 +2,6 @@
 # This script is part of Martin V\"ath's archwrap project.
 set -u
 which=`command -v which` || which=
-[ "$which" = 'which' ] && bzip=`which bzip2` \
+[ x"$which" = x'which' ] && bzip=`which bzip2` \
 		|| bzip=`command -v bzip2` || bzip=
-exec "${bzip:-bzip2}" -9 "$@"
+exec "${bzip:-bzip2}" -9 ${1+"$@"}

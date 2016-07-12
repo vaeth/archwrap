@@ -9,7 +9,7 @@ esac
 
 which=`command -v which` || which=
 MakeExternal() {
-	[ "$which" = 'which' ] && eval $1=\`which $2\` \
+	[ x"$which" = x'which' ] && eval $1=\`which $2\` \
 		|| eval $1=\`command -v $2\` || eval $1=
 	eval ": \${$1:=$2}"
 }
@@ -54,4 +54,4 @@ if $xzmode
 then	MakeExternal l xz
 else	MakeExternal l lzma
 fi
-exec "$l" $xz_opt "$@"
+exec "$l" $xz_opt ${1+"$@"}

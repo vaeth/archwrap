@@ -169,7 +169,7 @@ MainLoop() {
 	do	$cddone && Cd "$currdir"
 		cddone=false
 		pathname=$progargs
-		while [ "${pathname%/}" != "$pathname" ]
+		while [ x"${pathname%/}" != x"$pathname" ]
 		do	pathname=${pathname%/}
 		done
 		[ -z "${pathname:++}" ] && continue
@@ -284,8 +284,9 @@ DoIt() {
 tar)
 	case $mode in
 	u*)	IntoDir || return
-		eval "set -- $taropts"
-		"$tarprg" -x $verboseopt "$@" -f "$f" || MyErr;;
+		eval "set -- a $taropts"
+		shift
+		"$tarprg" -x $verboseopt ${1+"$@"} -f "$f" || MyErr;;
 	s*)	"$tarprg" -t $verbose -f "$f" || MyErr;;
 	t*)	MyErrNot;;
 	esac;;
@@ -293,13 +294,14 @@ tar.gz)
 	OptExternal gzip
 	case $mode in
 	u*)	IntoDir || return
-		eval "set -- $taropts"
+		eval "set -- a $taropts"
+		shift
 		if $tar_knows_gzip
-		then	"$tarprg" -x $verboseopt $gzipflag "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $gzipflag ${1+"$@"} -f "$f"
 		elif $tar_knows_use_compress_program
-		then	"$tarprg" -x $verboseopt $taruse "$gzip" "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $taruse "$gzip" ${1+"$@"} -f "$f"
 		else	"$gzip" -d -c -- "$f" | \
-				"$tarprg" -x $verboseopt "$@" -f -
+				"$tarprg" -x $verboseopt ${1+"$@"} -f -
 		fi;;
 	s*)	if $tar_knows_gzip
 		then	"$tarprg" -t $verbose $gzipflag -f "$f"
@@ -313,13 +315,14 @@ tar.bz2)
 	OptExternal bzip bzip2
 	case $mode in
 	u*)	IntoDir || return
-		eval "set -- $taropts"
+		eval "set -- a $taropts"
+		shift
 		if $tar_knows_bzip
-		then	"$tarprg" -x $verboseopt $bzipflag "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $bzipflag ${1+"$@"} -f "$f"
 		elif $tar_knows_use_compress_program
-		then	"$tarprg" -x $verboseopt $taruse "$bzip" "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $taruse "$bzip" ${1+"$@"} -f "$f"
 		else	"$bzip" -d -k -c -- "$f" | \
-				"$tarprg" -x $verboseopt "$@" -f -
+				"$tarprg" -x $verboseopt ${1+"$@"} -f -
 		fi;;
 	s*)	if $tar_knows_bzip
 		then	"$tarprg" -t $verbose $bzipflag -f "$f"
@@ -334,13 +337,14 @@ tar.lzma)
 	OptExternal lzma
 	case $mode in
 	u*)	IntoDir || return
-		eval "set -- $taropts"
+		eval "set -- a $taropts"
+		shift
 		if $tar_knows_lzma
-		then	"$tarprg" -x $verboseopt $lzmaflag "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $lzmaflag ${1+"$@"} -f "$f"
 		elif $tar_knows_use_compress_program
-		then	"$tarprg" -x $verboseopt $taruse "$lzma" "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $taruse "$lzma" ${1+"$@"} -f "$f"
 		else	"$lzma" -d -k -c -- "$f" | \
-				"$tarprg" -x $verboseopt "$@" -f -
+				"$tarprg" -x $verboseopt ${1+"$@"} -f -
 		fi;;
 	s*)	if $tar_knows_lzma
 		then	"$tarprg" -t $verbose $lzmaflag -f "$f"
@@ -355,13 +359,14 @@ tar.xz)
 	OptExternal xz
 	case $mode in
 	u*)	IntoDir || return
-		eval "set -- $taropts"
+		eval "set -- a $taropts"
+		shift
 		if $tar_knows_xz
-		then	"$tarprg" -x $verboseopt $xzflag "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $xzflag ${1+"$@"} -f "$f"
 		elif $tar_knows_use_compress_program
-		then	"$tarprg" -x $verboseopt $taruse "$xz" "$@" -f "$f"
+		then	"$tarprg" -x $verboseopt $taruse "$xz" ${1+"$@"} -f "$f"
 		else	"$xz" -d -k -c -- "$f" | \
-				"$tarprg" -x $verboseopt "$@" -f -
+				"$tarprg" -x $verboseopt ${1+"$@"} -f -
 		fi;;
 	s*)	if $tar_knows_xz
 		then	"$tarprg" -t $verbose $xzflag -f "$f"
@@ -376,10 +381,11 @@ tar.lrz)
 	OptExternal lrzip
 	case $mode in
 	u*)	IntoDir || return
-		eval "set -- $taropts"
+		eval "set -- a $taropts"
+		shift
 		MkTemp && \
 			"$lrzip" -d -o "$tempname" -- "$f" && \
-			"$tarprg" -x $verboseopt "$@" -f "$tempname" && \
+			"$tarprg" -x $verboseopt ${1+"$@"} -f "$tempname" && \
 			RmTemp \
 			|| MyErr;;
 	s*)	MkTemp && \
@@ -393,8 +399,9 @@ tar.7z)
 	OptExternal za 7za
 	case $mode in
 	u*)	IntoDir || return
-		eval "set -- $taropts"
-		"$za" -so e -- "$f" | "$tarprg" -x $verboseopt "$@" -f -;;
+		eval "set -- a $taropts"
+		shift
+		"$za" -so e -- "$f" | "$tarprg" -x $verboseopt ${1+"$@"} -f -;;
 	s*)	"$za" -so e -- "$f" | "$tarprg" -t $verbose -f -;;
 	t*)	"$za" t -- "$f";;
 	esac || MyErr;;
@@ -466,8 +473,9 @@ zip)
 	case $mode in
 	u*)	IntoDir || return
 		x=
-		eval set -- $zipopts
-		"$unzip" "$@" -- "$f";;
+		eval set -- a $zipopts
+		shift
+		"$unzip" ${1+"$@"} -- "$f";;
 	s*)	x='-l'
 		[ -n "${verbose:++}" ] && x='-v'
 		"$unzip" $x -- "$f";;
@@ -529,5 +537,5 @@ rar)
 esac
 }
 
-MainLoop "$@"
+MainLoop ${1+"$@"}
 Exit

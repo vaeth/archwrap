@@ -267,7 +267,7 @@ Dopack() {
 		namex=$destname.tar.lrz
 		OptExternal lrzip
 		"$lrzip" -L 9 -o "$namex" $quietopt -- "$destname.tar" && {
-			[ "$namex" = "$nameb" ] || \
+			[ x"$namex" = x"$nameb" ] || \
 				mv -- "$namex" "$nameb"
 		} || Errunp 'lrzip' "$nameb"
 	fi

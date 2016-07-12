@@ -199,7 +199,7 @@ Tarit() {
 	if [ -z "${remote:++}" ]
 	then	archive=$d/$name.$1
 		rm -f -- "$archive"
-	elif [ "$remote" = 'r' ]
+	elif [ x"$remote" = x'r' ]
 	then	archive=$remotepath$name.$1
 	else	archive=$remotepath
 	fi
@@ -240,7 +240,7 @@ MainLoop() {
 	d=$PWD
 	for progargs
 	do	dirname=$progargs
-		while [ "${dirname%/}" != "$dirname" ]
+		while [ x"${dirname%/}" != x"$dirname" ]
 		do	dirname=${dirname%/}
 		done
 		DoDir
@@ -276,12 +276,13 @@ DoDir() {
 	fi
 	name=${dirname##*/}
 	: ${name:=_}
-	eval "set -- $taropts"
+	eval "set -- a $taropts"
+	shift
 	if $tarcomp
-	then	Tarit "$ext" "$@"
+	then	Tarit "$ext" ${1+"$@"}
 		return
 	fi
-	Tarit tar "$@"
+	Tarit tar ${1+"$@"}
 	case ${comp:-R} in
 	R)	return;;
 	g)	gzipbest -c -- "$archive" >"$name.$ext";;
@@ -299,5 +300,5 @@ DoDir() {
 	rm -f -- "$archive"
 }
 
-MainLoop "$@"
+MainLoop ${1+"$@"}
 Exit
