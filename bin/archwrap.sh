@@ -68,8 +68,9 @@ MkTemp() {
 	fi
 	trap RmTemp EXIT HUP INT TERM
 	if $havemktemp
-	then	tempname=`mktemp "/tmp/${0##*/}.XXXXXXXX"` && \
-			[ -n "${tempname:++}" ] && return
+	then	tempname=`umask 077 && mktemp -- "${TMPDIR:-/tmp}/${0##*/}.XXXXXXXX"` \
+			&& [ -n "${tempname:++}" ] && test -f "$tempname" \
+			&& return
 		ErrMessage 'cannot create temporary file'
 		return 2
 	fi
@@ -97,8 +98,9 @@ MkTemp() {
 				r=$(( $r % 32768 ))
 			fi
 		fi
-		t=/tmp/${0##*/}.$$$c$r
+		t=${TMPDIR:-/tmp}/${0##*/}.$$$c$r
 		(
+			umask 077
 			set -C
 			: >"$t"
 		) && tempname=$t && return

@@ -135,8 +135,8 @@ do	test -d "$repack" || continue
 	rmdirname=
 	trap Gosane EXIT HUP INT TERM
 	if [ -n "${usetemp:++}" ]
-	then	rmdirname=`mktemp -d "/tmp/${0##*/}.XXXXXXXX"` \
-			&& [ -n "${rmdirname:++}" ] \
+	then	rmdirname=`umask 077 && mktemp -d -- "${TMPDIR:-/tmp}/${0##*/}.XXXXXXXX"` \
+			&& [ -n "${rmdirname:++}" ] && test -d "$rmdirname" \
 			|| Fatal 'cannot create temporary directory'
 		unpackp=$rmdirname
 	else	unpackp=$currd
