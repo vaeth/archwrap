@@ -146,18 +146,18 @@ CalcGnuTarVersion() {
 }
 
 CalcStarHasNoFsync() {
-	[ -z "${STAR_HAS_NOFSYNC++}" ] || case ${STAR_HAS_NOFSYNC} in
-	''|[nNfF0]*)
+	[ -z "${STAR_HAS_NOFSYNC++}" ] || case ${STAR_HAS_NOFSYNC:-n} in
+	[nNfF0-]*|[oO][fF]*)
 		STAR_HAS_NOFSYNC=false
 		return;;
-	esac || {
+	*)
 		STAR_HAS_NOFSYNC=:
 		return
-	}
+	esac
 	OptExternal tarprg star
 	if "$tarprg" -c -no-fsync >/dev/null 2>&1
-	then	STAR_HAS_NO_FSYNC=:
-	else	STAR_HAS_NO_FSYNC=false
+	then	STAR_HAS_NOFSYNC=:
+	else	STAR_HAS_NOFSYNC=false
 	fi
 }
 
