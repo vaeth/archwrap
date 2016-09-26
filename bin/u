@@ -55,7 +55,7 @@ case ${0##*/} in
 *uv*)	show=:;;
 esac
 OPTIND=1
-while getopts 'qd2:STflvtjaAXxcCnLpPEhH?' opt
+while getopts 'qd2:STflvtjaAXxcCnLpPEhH' opt
 do	case $opt in
 	q)	quiet=:;;
 	d)	mdir=:;;
@@ -80,6 +80,7 @@ do	case $opt in
 	p)	unset GNUTARVERSION STAR_HAS_NOFSYNC;;
 	P)	calc_version_only=:;;
 	E)	errbreak=:;;
+	'?')	exit 1;;
 	*)	Usage 0;;
 	esac
 done

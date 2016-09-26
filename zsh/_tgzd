@@ -1,6 +1,6 @@
 #compdef 7zd bzipd gzipd lrzd lzmad t7zd tard tbzd tgzd tlrd tlzd txzd xzd
 _arguments -s -S -A '-*' : \
-'(* -)'{'-h','-H','-\\?'}'[help]' \
+'(* -)'{'-h','-H'}'[help]' \
 '-R+[store output in PATH; use e.g. -R - for piping to stdout]:output-path:_files -/' \
 '-g[use gzip (appendix .tgz or .tar.gz)]' \
 '-b[use bzip2 (appendix .tbz or .tar.bz2)]' \

@@ -24,7 +24,7 @@ errbreak=false
 compat=false
 quiet=false
 OPTIND=1
-while getopts 'FfdDkEqhH?' opt
+while getopts 'FfdDkEqhH' opt
 do	case $opt in
 	F)	symlink=:;;
 	d)	withparent=:
@@ -35,6 +35,7 @@ do	case $opt in
 	E)	errbreak=:;;
 	f)	symlink=false;;
 	q)	quiet=:;;
+	'?')	exit 1;;
 	*)	Usage 0;;
 	esac
 done

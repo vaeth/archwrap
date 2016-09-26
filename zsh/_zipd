@@ -1,6 +1,6 @@
 #compdef zipd
 _arguments -s -S -A '-*' : \
-'(* -)'{'-h','-H','-\\?'}'[help]' \
+'(* -)'{'-h','-H'}'[help]' \
 '-F[Symbolic links are stored as such (default)]' \
 '-f[Symbolic links are stored as files]' \
 '-k[dos compatibility]' \

@@ -1,6 +1,6 @@
 #compdef u ud uv
 _arguments -s -S -A '-*' : \
-'(* -)'{'-h','-H','-\\?'}'[help]' \
+'(* -)'{'-h','-H'}'[help]' \
 '-d[uncompress into new directory ./ARCHIVE instead of .]' \
 '-2+[uncompress into new directory ./ARG instead of .]:destination directory:_files -/' \
 '-v[view contents of ARCHIVE (verbose)]' \

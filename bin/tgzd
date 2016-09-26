@@ -87,7 +87,7 @@ case ${0##*/} in
 	comp=;;
 esac
 OPTIND=1
-while getopts 'qAF@:R:SETcCfdDnbg7lLzmrtpPsXxhH?' opt
+while getopts 'qAF@:R:SETcCfdDnbg7lLzmrtpPsXxhH' opt
 do	case $opt in
 	q)	quiet=:;;
 	A)	xattr=false;;
@@ -119,6 +119,7 @@ do	case $opt in
 		remotepath=$OPTARG;;
 	R)	remote=R
 		remotepath=$OPTARG;;
+	'?')	exit 1;;
 	*)	Usage 0;;
 	esac
 done

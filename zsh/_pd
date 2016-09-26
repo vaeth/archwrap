@@ -1,6 +1,6 @@
 #compdef pd ppd
 _arguments -s -S -A '-*' : \
-'(* -)'{'-h','-H','-\\?'}'[help]' \
+'(* -)'{'-h','-H'}'[help]' \
 '-X[use long appendix (.tar.gz instead of .tgz etc)]' \
 '-d[pack also (parent) directory into archive, not only its content]' \
 '-C[Store as much as possible (Access Control Lists, creation time...)]' \

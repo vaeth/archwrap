@@ -75,7 +75,7 @@ case ${0##*/} in
 esac
 
 OPTIND=1
-while getopts 'vqXdcCSTsnaA7/lLrWwRNtUzZbBgGpFf0512486EhH?' opt
+while getopts 'vqXdcCSTsnaA7/lLrWwRNtUzZbBgGpFf0512486EhH' opt
 do	case $opt in
 	v)	verbose=:;;
 	q)	quiet=:;;
@@ -130,6 +130,7 @@ do	case $opt in
 	8)	modulo=8192;;
 	6)	modulo=16384;;
 	E)	errbreak=:;;
+	'?')	exit 1;;
 	*)	Usage 0;;
 	esac
 done
