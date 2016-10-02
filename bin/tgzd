@@ -156,9 +156,11 @@ then	Push taropts '-H=exustar'
 	$STAR_HAS_NOFSYNC && Push taropts '-no-fsync'
 	case $comp in
 	g)	Push taropts '-z'
-		export STAR_COMPRESS_FLAG='--best';;
+		STAR_COMPRESS_FLAG='--best'
+		export STAR_COMPRESS_FLAG;;
 	b)	Push taropts '-bz'
-		export STAR_COMPRESS_FLAG='-9';;
+		STAR_COMPRESS_FLAG='-9'
+		export STAR_COMPRESS_FLAG;;
 	[xlr7])	tarcomp=false;;
 	esac
 else	$tar_knows_xattr && $xattr && Push taropts '--xattrs'

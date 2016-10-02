@@ -49,7 +49,8 @@ if [ -z "${xz_opt:++}" ]
 then	CalcXz
 else	Remove '--extreme'
 fi
-export XZ_OPT='--extreme'
+XZ_OPT='--extreme'
+export XZ_OPT
 if $xzmode
 then	MakeExternal l xz
 else	MakeExternal l lzma
