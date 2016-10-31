@@ -48,7 +48,9 @@ Exit() {
 }
 
 Push() {
-	. push.sh
+	PushA_=`push.sh 2>/dev/null` || Fatal \
+"push.sh from https://github.com/vaeth/push (v2.0 or newer) required"
+	eval "$PushA_"
 	Push "$@"
 }
 

@@ -30,7 +30,8 @@ If you do not want to put the links to your path, you can
 source the archwrap_alias file (in a shell understanding the alias command)
 to obtain a similar effect in an interactive shell.
 
-You also need push.sh from https://github.com/vaeth/push in your path.
+You also need push.sh from https://github.com/vaeth/push (v2.0 or newer)
+in your $PATH.
 
 For installation under Gentoo, you can use the ebuild from the mv overlay
 (which is available by layman).
