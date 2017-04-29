@@ -13,7 +13,7 @@ _arguments -s -S -A '-*' : \
 '-j[junk pathnames (only for zip, arj, rar, 7z)]' \
 '-L[convert pathnames into lower case (only for .zip)]' \
 '-a[do not restore permission attributes (for .tar)]' \
-'-A[do not restore extended attributes]' \
+'-A[restore extended attributes]' \
 '-X[restore user id/group id (for .zip and .tar)]' \
 '-x[do not restore user id/group id]' \
 '-C[restore ACLs (for star)]' \

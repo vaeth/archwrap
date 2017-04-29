@@ -20,7 +20,7 @@ Uncompress/view/test ARCHIVE. The following options are available:
 -j junk pathnames (only for zip, arj, rar, 7z)
 -L convert pathnames into lower case (only for .zip)
 -a do not restore permission attributes (only for .tar)
--A do not restore extended attributes (forced if unsupported by tar)
+-A restore extended attributes (if supported by tar); default if XATTR is true
 -X restore user id/group id (only for .zip and .tar) (default for root)
 -x do not restore user id/group id
 -C restore Access Control Lists (for star)
@@ -32,6 +32,7 @@ Uncompress/view/test ARCHIVE. The following options are available:
 	exit ${1:-1}
 }
 
+CalcXattr
 restowner=
 use_star=false
 mdir=false
@@ -42,8 +43,6 @@ junk=false
 preserve=:
 ownernum=:
 use_acl=false
-use_xattr=:
-caremode=false
 errbreak=false
 lower=false
 toname=
@@ -70,10 +69,10 @@ do	case $opt in
 	t)	dotest=:;;
 	j)	junk=:;;
 	a)	preserve=false;;
-	A)	use_xattr=false;;
+	A)	xattr=:;;
 	X)	restowner=:;;
 	x)	restowner=false;;
-	c)	caremode=:;;
+	c)	unset STAR_HAS_NOFSYNC;;
 	C)	use_acl=:;;
 	n)	ownernum=false;;
 	L)	lower=:;;
@@ -120,32 +119,30 @@ fi
 
 SetTarPrg
 Push -c taropts
-$preserve && Push taropts '-p'
+! $preserve || Push taropts '-p'
 if $use_star
 then	gzipflag='-z'
 	bzipflag='-bz'
-	$use_acl && Push taropts '-acl'
-	$ownernum && Push taropts '-numeric'
+	! $use_acl || Push taropts '-acl'
+	! $ownernum || Push taropts '-numeric'
 	$restowner || Push taropts '-o'
-	if ! $caremode
-	then	"$tarprg" -c -no-fsync >/dev/null 2>&1 && Push taropts '-no-fsync'
-	fi
-	! $use_xattr || Push taropts '-xattr'
+	! $star_has_no_fsync || Push taropts '-no-fsync'
+	! $xattr || Push taropts '-xattr'
 else	gzipflag='--gzip'
 	bzipflag='--bzip2'
 	xzflag='--xz'
 	lzmaflag='--lzma'
 	taruse='--use-compress-program'
 	! $tar_knows_no_auto_compress || Push taropts '--no-auto-compress'
-	$tar_knows_numeric_owner && $ownernum && Push taropts '--numeric-owner'
-	$restowner && Push taropts '--same-owner'
-	$tar_knows_xattr && $use_xattr && Push taropts '--xattrs'
+	! $tar_knows_numeric_owner || ! $ownernum || Push taropts '--numeric-owner'
+	! $restowner || Push taropts '--same-owner'
+	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 fi
 
 Push -c zipopts $quietopt
-$restowner && Push zipopts '-X'
-$lower && Push zipopts '-L'
-$junk && Push zipopts '-j'
+! $restowner || Push zipopts '-X'
+! $lower || Push zipopts '-L'
+! $junk || Push zipopts '-j'
 
 Getf() {
 	f=$1

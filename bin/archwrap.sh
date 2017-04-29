@@ -2,6 +2,14 @@
 # This script is part of Martin V\"ath's archwrap project.
 # It provides shell functions for scripts like "tgzd" "zipd" "u"
 
+YesNo() {
+	case ${1:-n} in
+	[nNfF0-]*|[oO][fF]*)
+		return 1;;
+	esac
+	:
+}
+
 which=`command -v which` || which=
 MakeExternal() {
 	[ x"$which" = x'which' ] && eval $1=\`which $2\` \
@@ -148,19 +156,18 @@ CalcGnuTarVersion() {
 }
 
 CalcStarHasNoFsync() {
-	[ -z "${STAR_HAS_NOFSYNC++}" ] || case ${STAR_HAS_NOFSYNC:-n} in
-	[nNfF0-]*|[oO][fF]*)
-		STAR_HAS_NOFSYNC=false
-		return;;
-	*)
-		STAR_HAS_NOFSYNC=:
+	star_has_nofsync=:
+	if [ -n "${STAR_HAS_NOFSYNC++}" ]
+	then	YesNo "$STAR_HAS_NOFSYNC" || star_has_nofsync=false
 		return
-	esac
-	OptExternal tarprg star
-	if "$tarprg" -c -no-fsync >/dev/null 2>&1
-	then	STAR_HAS_NOFSYNC=:
-	else	STAR_HAS_NOFSYNC=false
 	fi
+	OptExternal tarprg star
+	"$tarprg" -c -no-fsync >/dev/null 2>&1 || star_has_nofsync=false
+}
+
+CalcXattr() {
+	xattr=:
+	YesNo "${XATTR-}" || xattr=false
 }
 
 SetTarPrg() {
@@ -186,7 +193,7 @@ SetTarPrg() {
 	MakeExternal tarprg tar
 	CalcGnuTarVersion
 # X >= 1.28: --sort=names
-# X >= 1.27: --xattr
+# X >= 1.27: --xattrs
 # X >= 1.22: --xz
 # X >= 1.21: --no-auto-compress
 # X >= 1.20: --lzma

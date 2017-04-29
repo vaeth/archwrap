@@ -23,7 +23,7 @@ Create archive ./zipdir.tgz with contents of zipdir
 -x use short names (.tgz instead of .tar.gz etc)
 -S use star instead of tar, ignore GNUTARVERSION
 -T use tar instead of star (default)
--A do not store extended attributes (forced if unsupported by tar)
+-A Store extended attributes (if unsupported by tar); default if XATTR is true
 -C store as much as possible (Access Control Lists, creation time...)
 -c be careful - avoid star -no-fsync; same as STAR_HAS_NOFSYNC=false
 -F symbolic links are stored as such (default)
@@ -38,8 +38,8 @@ Create archive ./zipdir.tgz with contents of zipdir
 	exit ${1:-1}
 }
 
+CalcXattr
 use_star=false
-xattr=:
 follow=false
 control=false
 withparent=false
@@ -90,11 +90,11 @@ OPTIND=1
 while getopts 'qAF@:R:SETcCfdDnbg7lLzmrtpPsXxhH' opt
 do	case $opt in
 	q)	quiet=:;;
-	A)	xattr=false;;
+	A)	xattr=:;;
 	F)	follow=false;;
 	S)	use_star=:;;
 	T)	use_star=false;;
-	c)	STAR_HAS_NOFSYNC=;;
+	c)	unset STAR_HAS_NOFSYNC;;
 	C)	control=:;;
 	E)	errbreak=:;;
 	f)	follow=:;;
@@ -140,20 +140,20 @@ fi
 
 SetTarPrg
 Push -c taropts '-c'
-$quiet  || Push taropts '-v'
-$follow && Push taropts '-h'
+$quiet || Push taropts '-v'
+! $follow || Push taropts '-h'
 
 tarcomp=:
 errfile=false
 if $use_star
 then	Push taropts '-H=exustar'
 	# Push taropts '-H=pax'
-	$xattr && Push taropts '-xattr'
-	$control && Push taropts '-acl' '-xfflags'
+	! $xattr || Push taropts '-xattr'
+	! $control || Push taropts '-acl' '-xfflags'
 	#Push taropts "-dirmode"
-	$ownernum && Push taropts '-numeric'
-	$sparse && Push taropts '-sparse'
-	$STAR_HAS_NOFSYNC && Push taropts '-no-fsync'
+	! $ownernum || Push taropts '-numeric'
+	! $sparse || Push taropts '-sparse'
+	! $star_has_nofsync || Push taropts '-no-fsync'
 	case $comp in
 	g)	Push taropts '-z'
 		STAR_COMPRESS_FLAG='--best'
@@ -163,11 +163,11 @@ then	Push taropts '-H=exustar'
 		export STAR_COMPRESS_FLAG;;
 	[xlr7])	tarcomp=false;;
 	esac
-else	$tar_knows_xattr && $xattr && Push taropts '--xattrs'
-	$tar_knows_numeric_owner && $ownernum && Push taropts '--numeric-owner'
-	$tar_knows_sort && Push taropts '--sort=name'
-	$tar_knows_sparse && Push taropts '-S'
-	$tar_knows_use_compress_program && case $comp in
+else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
+	! $tar_knows_numeric_owner || ! $ownernum || Push taropts '--numeric-owner'
+	! $tar_knows_sort || Push taropts '--sort=name'
+	! $tar_knows_sparse || Push taropts '-S'
+	! $tar_knows_use_compress_program || case $comp in
 	x)	Push taropts '--use-compress-program' "${0%/*}/xzbest";;
 	b)	Push taropts '--use-compress-program' "${0%/*}/bzipbest";;
 	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
@@ -236,7 +236,7 @@ Tarit() {
 		RmTemp
 	fi
 	Cd "$d" || stat=$?
-	[ $stat -ne 0 ] && Error $stat "error occured during tar of $name"
+	[ $stat -eq 0 ] || Error $stat "error occured during tar of $name"
 }
 
 MainLoop() {

@@ -11,7 +11,7 @@ _arguments -s -S -A '-*' : \
 '-t[use Tar (appendix .tar)]' \
 '-X[use long names (appendix .tar.gz over .tgz)]' \
 '-x[use short names (appendix .tgz over .tar.gz)]' \
-'-A[do not store extended attributes]' \
+'-A[store extended attributes]' \
 '-S[use star instead of tar]' \
 '-T[use tar instead of star (default)]' \
 '-C[store all (ACLs, time...)]' \
