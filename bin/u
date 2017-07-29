@@ -150,9 +150,11 @@ Getf() {
 	for i in '' .tar .TAR
 	do	for j in \
 			z bz2 bz tbz2 tbz gz tgz taz dir 7z t7z lz lzm lzma xz \
-			tlz txz lrz tlr tlrz lha lzh arj arz zip jar xpi apk okular rar \
+			tlz txz lrz tlr tlrz lha lzh arj arz zip jar xpi crate \
+			cra apk okular rar \
 			Z BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR 7Z T7Z LZ LZM LZMA XZ \
-			TLZ TXZ LRZ TLR TLRZ LHA LZH ARJ ARZ ZIP JAR XPI APK OKULAR RAR
+			TLZ TXZ LRZ TLR TLRZ LHA LZH ARJ ARZ ZIP JAR XPI CRATE \
+			CRA APK OKULAR RAR
 		do	f=$1$i.$j
 			test -f "$f" && return
 		done
@@ -211,7 +213,7 @@ DoCases() {
 	*.tar|*.TAR)
 		typ=tar
 		full=:;;
-	*.dir|*.taz|*.tgz|*.DIR|*.TAZ|*.TGZ)
+	*.dir|*.taz|*.tgz|*.crate|*.cra|*.DIR|*.TAZ|*.TGZ|*.CRATE|*.CRA)
 		typ='tar.gz'
 		full=:;;
 	*.tbz|*.tbz2|*.TBZ|*.TBZ2)
