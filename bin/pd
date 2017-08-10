@@ -18,6 +18,7 @@ where option is one of the following:
 -S/T use star/tar (default is as in tgzd script)
 -t/U select/unselect tar (*.tar is not deleted, even if it is longer)
 -z/Z select/unselect zip
+-o/O select/unselect brotli
 -b/B select/unselect bzip (by default not selected)
 -g/G select/unselect gzip
 -7// select/unselect 7z
@@ -36,6 +37,7 @@ where option is one of the following:
 	exit ${1:-1}
 }
 tgzapp='tgz'
+tbrapp='tbr'
 tbzapp='tbz'
 svzapp='t7z'
 lzmapp='tlz'
@@ -57,6 +59,7 @@ quiet=false
 Selectall() {
 	withzip=:
 	withtgz=:
+	withtbr=:
 	withtbz=:
 	withsvz=:
 	withlzm=:
@@ -75,11 +78,12 @@ case ${0##*/} in
 esac
 
 OPTIND=1
-while getopts 'vqXdcCSTsnaA7/lLrWwRNtUzZbBgGpFf0512486EhH' opt
+while getopts 'vqXdcCSTsnaA7/lLrWwRNtUzZoObBgGpFf0512486EhH' opt
 do	case $opt in
 	v)	verbose=:;;
 	q)	quiet=:;;
 	X)	tgzapp='tar.gz'
+		tbrapp='tar.bro'
 		tbzapp='tar.bz2'
 		svzapp='tar.7z'
 		lzmapp='tar.lzma'
@@ -104,6 +108,7 @@ do	case $opt in
 	S)	nostar='-S';;
 	t)	withtar=:;;
 	z)	withzip=:;;
+	o)	withtbr=:;;
 	b)	withtbz=:;;
 	g)	withtgz=:;;
 	7)	withsvz=:;;
@@ -113,6 +118,7 @@ do	case $opt in
 	T)	nostar='-T';;
 	U)	withtar=false;;
 	Z)	withzip=false;;
+	O)	withtbr=false;;
 	B)	withtbz=false;;
 	G)	withtgz=false;;
 	/)	withsvz=false;;
@@ -195,6 +201,7 @@ Dopack() {
 	zipnow=$withzip
 	tarnow=$withtar
 	tgznow=$withtgz
+	tbrnow=$withtbr
 	tbznow=$withtbz
 	svznow=$withsvz
 	lzmnow=$withlzm
@@ -203,12 +210,13 @@ Dopack() {
 	if $preserv
 	then	$zipnow && test -s "$destname.zip" && zipnow=false
 		$tgznow && test -s "$destname.$tgzapp" && tgznow=false
+		$tbrnow && test -s "$destname.$tbrapp" && tbrnow=false
 		$tbznow && test -s "$destname.$tbzapp" && tbznow=false
 		$svznow && test -s "$destname.$svzapp" && svznow=false
 		$lzmnow && test -s "$destname.$lzmapp" && lzmnow=false
 		$lrznow && test -s "$destname.$lrzapp" && lrznow=false
 	fi
-	if $tgznow || $tbznow || $svznow || $lzmnow || $lrznow
+	if $tgznow || $tbrnow || $tbznow || $svznow || $lzmnow || $lrznow
 	then	tarnow=:
 	fi
 	$preserv && $tarnow && test -s "$destname.tar" && tarnow=false
@@ -232,6 +240,13 @@ Dopack() {
 	fi
 	Compare
 	nameb=$destname.$tbzapp
+	if $tbrnow
+	then	EchoCond "Creating $nameb"
+		brotlibest --input "$destname.tar" --output "$nameb" \
+			|| Errunp 'brotli' "$nameb"
+	fi
+	Compare
+	nameb=$destname.$svzapp
 	if $tbznow
 	then	EchoCond "Creating $nameb"
 		bzipbest -k -c -- "$destname.tar" >"$nameb" \

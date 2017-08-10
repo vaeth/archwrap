@@ -16,6 +16,8 @@ _arguments -s -S -A '-*' : \
 '-U[unselect tar]' \
 '-z[select zip]' \
 '-Z[unselect zip]' \
+'-o[select brotli]' \
+'-O[unselect brotli]' \
 '-b[select bzip]' \
 '-B[unselect bzip]' \
 '-g[select gzip]' \

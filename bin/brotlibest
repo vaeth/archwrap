@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# This script is part of Martin V\"ath's archwrap project.
+set -u
+exec bro --quality 99 --window 24 ${1+"$@"}

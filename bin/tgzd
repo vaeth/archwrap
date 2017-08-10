@@ -12,6 +12,7 @@ Create archive ./zipdir.tgz with contents of zipdir
          The typical call is -@ user@machine: or -@ user@mach:/tmp/
          to use remote connection via rsh (GNU tar) resp. ssh (star)
 -R PATH  store output in PATH; use e.g. -R - for piping to stdout
+-B use brotli   (archivename is ./zipdir.tbr or ./zipdir.tar.bro)
 -g use gzip     (archivename is ./zipdir.tgz or ./zipdir.tar.gz)
 -b use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)
 -l use lzma     (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)
@@ -49,45 +50,50 @@ ownernum=:
 sparse=:
 remote=
 errbreak=false
-comp='g'
+comp=g
 quiet=false
 calc_version_only=false
 case ${0##*/} in
+*bro*)
+	comp=B
+	xnames=:;;
 *lzma*|*.*lz*)
-	comp='l'
+	comp=l
 	xnames=:;;
 *txz*)
-	comp='x';;
+	comp=x;;
 *xz*)
-	comp='x'
+	comp=x
 	xnames=:;;
 *bzip*|*.*bz*)
-	comp='b'
+	comp=b
 	xnames=:;;
 *gzip*|*.*gz*)
-	comp='g'
+	comp=g
 	xnames=:;;
 *.*7z*)
-	comp='7'
+	comp=7
 	xnames=:;;
 *.*lr*)
-	comp='r'
+	comp=r
 	xnames=:;;
+*tbr*)
+	comp=B;;
 *tbz*)
-	comp='b';;
+	comp=b;;
 *tgz*)
-	comp='g';;
+	comp=g;;
 *7z*)
-	comp='7';;
+	comp=7;;
 *lz*)
-	comp='l';;
+	comp=l;;
 *lr*)
-	comp='r';;
+	comp=r;;
 *tar*)
 	comp=;;
 esac
 OPTIND=1
-while getopts 'qAF@:R:SETcCfdDnbg7lLzmrtpPsXxhH' opt
+while getopts 'qAF@:R:SETcCfdDnBbg7lLzmrtpPsXxhH' opt
 do	case $opt in
 	q)	quiet=:;;
 	A)	xattr=:;;
@@ -107,6 +113,7 @@ do	case $opt in
 	p)	unset GNUTARVERSION STAR_HAS_NOFSYNC;;
 	P)	calc_version_only=:;;
 	s)	sparse=;;
+	B)	comp=B;;
 	b)	comp=b;;
 	g)	comp=g;;
 	[lzm])	comp=l;;
@@ -169,6 +176,7 @@ else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 	! $tar_knows_sparse || Push taropts '-S'
 	! $tar_knows_use_compress_program || case $comp in
 	x)	Push taropts '--use-compress-program' "${0%/*}/xzbest";;
+	B)	Push taropts '--use-compress-program' "${0%/*}/brotlibest";;
 	b)	Push taropts '--use-compress-program' "${0%/*}/bzipbest";;
 	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
 	7)	Push taropts '--use-compress-program' "${0%/*}/7zbest";;
@@ -180,6 +188,7 @@ $tarcomp || ! $tar_needs_errfile || errfile=:
 if $xnames
 then	case $comp in
 	g)	ext='tar.gz';;
+	B)	ext='tar.bro';;
 	b)	ext='tar.bz2';;
 	7)	ext='tar.7z';;
 	l)	ext='tar.lzma';;
@@ -189,6 +198,7 @@ then	case $comp in
 	esac
 else	case $comp in
 	g)	ext='tgz';;
+	B)	ext='tbr';;
 	b)	ext='tbz';;
 	7)	ext='t7z';;
 	l)	ext='tlz';;
@@ -289,6 +299,7 @@ DoDir() {
 	case ${comp:-R} in
 	R)	return;;
 	g)	gzipbest -c -- "$archive" >"$name.$ext";;
+	B)	brotlibest --input "$archive" --output "$name.$ext";;
 	b)	bzipbest -k -c -- "$archive" >"$name.$ext";;
 	7)	OptExternal za 7za
 		"$za" a -- "$name.$ext" "$archive";;
