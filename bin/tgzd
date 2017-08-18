@@ -13,7 +13,8 @@ Create archive ./zipdir.tgz with contents of zipdir
          to use remote connection via rsh (GNU tar) resp. ssh (star)
 -R PATH  store output in PATH; use e.g. -R - for piping to stdout
 -B use brotli   (archivename is ./zipdir.tbr or ./zipdir.tar.bro)
--g use gzip     (archivename is ./zipdir.tgz or ./zipdir.tar.gz)
+-g use zopfli   (archivename is ./zipdir.tgz or ./zipdir.tar.gz)
+-Q quick: Use gzip instead of zopfli (even if zopfli is available)
 -b use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)
 -l use lzma     (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)
 -L use xz       (archivename is ./zipdir.txz or ./zipdir.tar.xz)
@@ -52,6 +53,7 @@ remote=
 errbreak=false
 comp=g
 quiet=false
+quick=false
 calc_version_only=false
 case ${0##*/} in
 *bro*)
@@ -93,9 +95,10 @@ case ${0##*/} in
 	comp=;;
 esac
 OPTIND=1
-while getopts 'qAF@:R:SETcCfdDnBbg7lLzmrtpPsXxhH' opt
+while getopts 'qQAF@:R:SETcCfdDnBbg7lLzmrtpPsXxhH' opt
 do	case $opt in
 	q)	quiet=:;;
+	Q)	quick=:;;
 	A)	xattr=:;;
 	F)	follow=false;;
 	S)	use_star=:;;
@@ -132,9 +135,10 @@ do	case $opt in
 done
 shift $(( $OPTIND - 1 ))
 
+unset tarprg xzbest brotlibest bzipbest gzipbest sevenzbest lzmabest lrzip
+
 if $calc_version_only
-then	tarprg=
-	CalcGnuTarVersion && printf '%s' "$GNUTARVERSION"
+then	CalcGnuTarVersion && printf '%s' "$GNUTARVERSION"
 	exit
 fi
 
@@ -162,9 +166,13 @@ then	Push taropts '-H=exustar'
 	! $sparse || Push taropts '-sparse'
 	! $star_has_nofsync || Push taropts '-no-fsync'
 	case $comp in
-	g)	Push taropts '-z'
-		STAR_COMPRESS_FLAG='--best'
-		export STAR_COMPRESS_FLAG;;
+	g)	CalcGzipbest $quick
+		if [ "$gziptext" = gzip ]
+		then	Push taropts '-z'
+			STAR_COMPRESS_FLAG='--best'
+			export STAR_COMPRESS_FLAG
+		else	tarcomp=false
+		fi;;
 	b)	Push taropts '-bz'
 		STAR_COMPRESS_FLAG='-9'
 		export STAR_COMPRESS_FLAG;;
@@ -175,12 +183,21 @@ else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 	! $tar_knows_sort || Push taropts '--sort=name'
 	! $tar_knows_sparse || Push taropts '-S'
 	! $tar_knows_use_compress_program || case $comp in
-	x)	Push taropts '--use-compress-program' "${0%/*}/xzbest";;
-	B)	Push taropts '--use-compress-program' "${0%/*}/brotlibest";;
-	b)	Push taropts '--use-compress-program' "${0%/*}/bzipbest";;
-	g)	Push taropts '--use-compress-program' "${0%/*}/gzipbest";;
-	7)	Push taropts '--use-compress-program' "${0%/*}/7zbest";;
-	l)	Push taropts '--use-compress-program' "${0%/*}/lzmabest";;
+	x)	OptExternal xzbest
+		Push taropts '--use-compress-program' "$xzbest";;
+	B)	OptExternal brotlibest
+		Push taropts '--use-compress-program' "$brotlibest";;
+	b)	OptExternal bzipbest
+		Push taropts '--use-compress-program' "$bzipbest";;
+	g)	CalcGzipbest $quick
+		if [ "$gziptext" = gzip ]
+		then	Push taropts '--use-compress-program' "$gzipbest"
+		else	tarcomp=false
+		fi;;
+	7)	OptExternal sevenzbest 7zbest
+		Push taropts '--use-compress-program' "$sevenzbest";;
+	l)	OptExternal lzmabest
+		Push taropts '--use-compress-program' "$lzmabest";;
 	r)	tarcomp=false;;
 	esac
 fi
@@ -280,7 +297,6 @@ StripDirname() {
 	done
 }
 
-unset za lrzip
 DoDir() {
 	StripDirname
 	if [ -z "${dirname:++}" ] || ! test -d "$dirname"
@@ -298,13 +314,18 @@ DoDir() {
 	Tarit tar ${1+"$@"}
 	case ${comp:-R} in
 	R)	return;;
-	g)	gzipbest -c -- "$archive" >"$name.$ext";;
-	B)	brotlibest --input "$archive" --output "$name.$ext";;
-	b)	bzipbest -k -c -- "$archive" >"$name.$ext";;
-	7)	OptExternal za 7za
-		"$za" a -- "$name.$ext" "$archive";;
-	l)	lzmabest -k -c -- "$archive" >"$name.$ext";;
-	x)	xzbest -k -c -- "$archive" >"$name.$ext";;
+	g)	CalcGzipbest $quick
+		"$gzipbest" -c -- "$archive" >"$name.$ext";;
+	B)	OptExternal brotlibest
+		"$brotlibest" --input "$archive" --output "$name.$ext";;
+	b)	OptExternal bzipbest
+		"$bzipbest" -k -c -- "$archive" >"$name.$ext";;
+	7)	OptExternal sevenzbest 7zbest
+		"$sevenzbest" <"$archive" >"$name.$ext";;
+	l)	OptExternal lzmabest
+		"$lzmabest" -k -c -- "$archive" >"$name.$ext";;
+	x)	OptExternal xzbest
+		"$xzbest" -k -c -- "$archive" >"$name.$ext";;
 	r)	OptExternal lrzip
 		"$lrzip" -L 9 -o "$name.$ext" -- "$archive";;
 	esac || {

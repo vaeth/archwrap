@@ -26,4 +26,5 @@ _arguments -s -S -A '-*' : \
 '-p[ignore GNUTARVERSION]' \
 '-P[print output for GNUTARVERSION]' \
 '-q[be quiet]' \
+'-Q[quick\: use gzip instead of zoplfi]' \
 '*:directory:_files -/'

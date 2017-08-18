@@ -18,7 +18,7 @@ MakeExternal() {
 }
 
 OptExternal() {
-	eval "[ -n \"\${$1:++}\" ]" || MakeExternal $1 ${2-$1}
+	eval "[ -n \"\${$1:++}\" ]" || MakeExternal "$1" "${2-$1}"
 }
 
 Echo() {
@@ -163,6 +163,18 @@ CalcStarHasNoFsync() {
 	fi
 	OptExternal tarprg star
 	"$tarprg" -c -no-fsync >/dev/null 2>&1 || star_has_nofsync=false
+}
+
+CalcGzipbest() {
+	if $1 || ! command -v zopfli >/dev/null 2>&1
+	then	MakeExternal gzipbest gzipbest
+		gziptext=gzip
+	else	MakeExternal gzipbest zopflibest
+		gziptext=zopfli
+	fi
+	CalcGzipbest() {
+:
+}
 }
 
 CalcXattr() {

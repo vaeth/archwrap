@@ -42,5 +42,6 @@ _arguments -s -S -A '-*' : \
 '-8[compare sizes modulo 8k]' \
 '-6[compare sizes modulo 16k]' \
 '-q[quiet]' \
+'-Q[quick\: use gzip instead of zoplfi]' \
 '-v[verbose]' \
 '*:directory:_files -/'

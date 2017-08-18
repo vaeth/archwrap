@@ -1,13 +1,13 @@
 
 archwrap - A collection of POSIX shell scripts to invoke archiver programs like
-           (s)tar/gzip/bzip2/xz/zip/7z/lzma/lrzip/arj/zoo/ ...
+           (s)tar/gzip/bzip2/xz/zip/7z/lzma/lrzip/arj/zoo/brotli/zopfli ...
 
 Author: Martin Väth <vaeth@mvath.de>
 
 This project is under the BSD license.
 
 These are some POSIX shell scripts which form an interface to
-various archiver programs like (s)tar, xz, bzip, gzip, zip, ...
+various archiver programs like (s)tar, xz, bzip, gzip/zopfli, zip, ...
 It is in particular possible to invoke all archivers (keeping only the "best"
 result), to repack archives, pack to remote hosts etc.
 Also less popular archivers like 7z or lrz are supported.
@@ -44,7 +44,7 @@ Some examples showing the standard usage:
       only the "best" version. Lots of options control the details:
       Invoke "pd"/"ppd" without any arguments for a list of them.
       ppd (in contrast to pd) only chooses the most popular archivers.
-   b) tgzd  directory(s)
+   b) tgzd  directory(s) (actually uses zopfli unless -Q is specified)
       tbzd  directory(s)
       tlzd  directory(s)
       t7zd  directory(s)

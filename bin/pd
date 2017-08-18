@@ -33,7 +33,8 @@ where option is one of the following:
 -5   compare sizes modulo 512 bytes (default)
 -1/2/4/8/6 compare sizes modulo 1k/2k/4k/8k/16k
 -v   verbose
--q   quiet"
+-q   quiet
+-Q   quick: Use gzip instead of zopfli (even if zopfli is available)"
 	exit ${1:-1}
 }
 tgzapp='tgz'
@@ -55,6 +56,7 @@ secmode=
 errbreak=false
 verbose=false
 quiet=false
+quick=false
 
 Selectall() {
 	withzip=:
@@ -78,10 +80,11 @@ case ${0##*/} in
 esac
 
 OPTIND=1
-while getopts 'vqXdcCSTsnaA7/lLrWwRNtUzZoObBgGpFf0512486EhH' opt
+while getopts 'vqQXdcCSTsnaA7/lLrWwRNtUzZoObBgGpFf0512486EhH' opt
 do	case $opt in
 	v)	verbose=:;;
 	q)	quiet=:;;
+	Q)	quick=:;;
 	X)	tgzapp='tar.gz'
 		tbrapp='tar.bro'
 		tbzapp='tar.bz2'
@@ -154,6 +157,9 @@ else	EchoCond() {
 	Echo "$@"
 }
 fi
+
+quickopt=
+! $quick || quickopt=Q
 
 Errunp() {
 	Error 2 "Error when calling $1 to create $2"
@@ -229,14 +235,15 @@ Dopack() {
 	fi
 	if $tarnow
 	then	EchoCond "Creating $destname.tar"
-		tgzd -t $quietopt $nostar $control $secmode $withparent $linksresolve $plainowner -- "$topack" \
+		tgzd -t$quickopt $quietopt $nostar $control $secmode $withparent $linksresolve $plainowner -- "$topack" \
 			|| Errunp 'tgzd' "$destname.tar"
 	fi
 	nameb=$destname.$tgzapp
 	if $tgznow
 	then	EchoCond "Creating $nameb"
-		gzipbest -c -- "$destname.tar" >"$nameb" \
-			|| Errunp 'gzip' "$nameb"
+		CalcGzipbest $quick
+		"$gzipbest" -c -- "$destname.tar" >"$nameb" \
+			|| Errunp "$gziptext" "$nameb"
 	fi
 	Compare
 	nameb=$destname.$tbzapp

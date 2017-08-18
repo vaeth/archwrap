@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# This script is part of Martin V\"ath's archwrap project.
+set -u
+which=`command -v which` || which=
+if [ x"$which" = x'which' ]
+then	prg=`which zopfli` || prg=`which gzipbest` || prg=
+else	prg=`command -v zopfli` || prg=`command -v gzipbest` || prg=
+fi
+exec "${prg:-gzipbest}" ${1+"$@"}
