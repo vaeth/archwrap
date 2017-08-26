@@ -20,6 +20,7 @@ Create archive ./zipdir.tgz with contents of zipdir
 -L use xz       (archivename is ./zipdir.txz or ./zipdir.tar.xz)
 -7 use 7z       (archivename is ./zipdir.t7z or ./zipdir.tar.7z)
 -r use lrzip    (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)
+-z use zstd     (archivename is ./zipdir.tzs or ./zipdir.tar.zst)
 -t use Tar only (archivename is ./zipdir.tar)
 -X use long names (.tar.gz instead of .tgz etc)
 -x use short names (.tgz instead of .tar.gz etc)
@@ -67,6 +68,11 @@ case ${0##*/} in
 *xz*)
 	comp=x
 	xnames=:;;
+*tzst*)
+	comp=z
+	xnames=:;;
+*tzs*)
+	comp=z;;
 *bzip*|*.*bz*)
 	comp=b
 	xnames=:;;
@@ -95,7 +101,7 @@ case ${0##*/} in
 	comp=;;
 esac
 OPTIND=1
-while getopts 'qQAF@:R:SETcCfdDnBbg7lLzmrtpPsXxhH' opt
+while getopts 'qQAF@:R:SETcCfdDnBzbg7lLzmrtpPsXxhH' opt
 do	case $opt in
 	q)	quiet=:;;
 	Q)	quick=:;;
@@ -117,6 +123,7 @@ do	case $opt in
 	P)	calc_version_only=:;;
 	s)	sparse=;;
 	B)	comp=B;;
+	B)	comp=z;;
 	b)	comp=b;;
 	g)	comp=g;;
 	[lzm])	comp=l;;
@@ -135,7 +142,7 @@ do	case $opt in
 done
 shift $(( $OPTIND - 1 ))
 
-unset tarprg xzbest brotlibest bzipbest gzipbest sevenzbest lzmabest lrzip
+unset tarprg xzbest brotlibest bzipbest gzipbest sevenzbest lzmabest lrzip zstdbest
 
 if $calc_version_only
 then	CalcGnuTarVersion && printf '%s' "$GNUTARVERSION"
@@ -176,7 +183,8 @@ then	Push taropts '-H=exustar'
 	b)	Push taropts '-bz'
 		STAR_COMPRESS_FLAG='-9'
 		export STAR_COMPRESS_FLAG;;
-	[xlr7])	tarcomp=false;;
+	[xlrz7])
+		tarcomp=false;;
 	esac
 else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 	! $tar_knows_numeric_owner || ! $ownernum || Push taropts '--numeric-owner'
@@ -189,6 +197,8 @@ else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 		Push taropts '--use-compress-program' "$brotlibest";;
 	b)	OptExternal bzipbest
 		Push taropts '--use-compress-program' "$bzipbest";;
+	z)	OptExternal zstdbest
+		Push taropts '--use-compress-program' "$zstdbest";;
 	g)	CalcGzipbest $quick
 		if [ "$gziptext" = gzip ]
 		then	Push taropts '--use-compress-program' "$gzipbest"
@@ -207,6 +217,7 @@ then	case $comp in
 	g)	ext='tar.gz';;
 	B)	ext='tar.bro';;
 	b)	ext='tar.bz2';;
+	z)	ext='tar.zst';;
 	7)	ext='tar.7z';;
 	l)	ext='tar.lzma';;
 	x)	ext='tar.xz';;
@@ -217,6 +228,7 @@ else	case $comp in
 	g)	ext='tgz';;
 	B)	ext='tbr';;
 	b)	ext='tbz';;
+	z)	ext='tzs';;
 	7)	ext='t7z';;
 	l)	ext='tlz';;
 	x)	ext='txz';;
@@ -278,14 +290,14 @@ MainLoop() {
 }
 
 StripDirname() {
-	for strip in taz tgz tbz dir tlz tlrz tlr
+	for strip in taz tgz tbz dir tlz tlrz tlr tzst tzs tbr tbro
 	do	case $dirname in
 		*."$strip")
 			dirname=${dirname%.*}
 			return;;
 		esac
 	done
-	for strip in z gz bz bz2 7z t7z lz lzm lzma lrz
+	for strip in z gz bz bz2 7z t7z lz lzm lzma lrz zst bro
 	do	case $dirname in
 		*.tar."$strip")
 			dirname=${dirname%.*.*}
@@ -320,6 +332,8 @@ DoDir() {
 		"$brotlibest" --input "$archive" --output "$name.$ext";;
 	b)	OptExternal bzipbest
 		"$bzipbest" -k -c -- "$archive" >"$name.$ext";;
+	z)	OptExternal zstdbest
+		"$zstdbest" -o "$name.$ext" -- "$archive";;
 	7)	OptExternal sevenzbest 7zbest
 		"$sevenzbest" <"$archive" >"$name.$ext";;
 	l)	OptExternal lzmabest

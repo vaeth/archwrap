@@ -149,10 +149,12 @@ Getf() {
 	test -f "$f" && return
 	for i in '' .tar .TAR
 	do	for j in \
-			z bro brotli tbr bz2 bz tbz2 tbz gz tgz taz dir \
+			z bro brotli tbr zst zstd tzs tzst tzstd \
+			bz2 bz tbz2 tbz gz tgz taz dir \
 			7z t7z lz lzm lzma xz tlz txz lrz tlr tlrz lha lzh \
 			arj arz zip jar xpi crate cra apk okular rar \
-			Z BRO BROTLI TBZ BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR \
+			Z BRO BROTLI TBR ZST ZSTD TZS TZST TZSTD \
+			BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR \
 			7Z T7Z LZ LZM LZMA XZ TLZ TXZ LRZ TLR TLRZ LHA LZH \
 			ARJ ARZ ZIP JAR XPI CRATE CRA APK OKULAR RAR
 		do	f=$1$i.$j
@@ -219,6 +221,9 @@ DoCases() {
 	*.tbr|*.TBR)
 		typ='tar.bro'
 		full=:;;
+	*.tzs|*.tzst|*.tzstd|*.TZS|*.TZST|*.TZSTD)
+		typ='tar.zst'
+		full=:;;
 	*.tbz|*.tbz2|*.TBZ|*.TBZ2)
 		typ='tar.bz2'
 		full=:;;
@@ -238,6 +243,8 @@ DoCases() {
 		typ='gz';;
 	*.bro|*.brotli|*.BRO|*.BROTLI)
 		typ='bro';;
+	*.zst|*.zstd|*.ZST|*.ZSTD)
+		typ='zst';;
 	*.bz|*.bz2|*.BZ|*.BZ2)
 		typ='bz2';;
 	*.lm|*.lzm|*.lzma|*.LM|*.LZM|*.LZMA)
@@ -283,7 +290,7 @@ DoCases() {
 	return 0
 }
 
-unset bzip bro gzip lzma xz lrzip za unzip unarj lha unrar
+unset bzip bro zstd gzip lzma xz lrzip za unzip unarj lha unrar
 DoIt() {
 	case $typ in
 tar)
@@ -333,6 +340,24 @@ tar.bro)
 				"$tarprg" -t $verbose -f -
 		fi || MyErr;;
 	t*)	MyErrNot;;
+	esac;;
+tar.zst)
+	OptExternal zstd
+	case $mode in
+	u*)	IntoDir || return
+		eval "set -- a $taropts"
+		shift
+		if $tar_knows_use_compress_program
+		then	"$tarprg" -x $verboseopt $taruse "$zstd" ${1+"$@"} -f "$f"
+		else	"$zstd" -d --stdout -- "$f" | \
+				"$tarprg" -x $verboseopt ${1+"$@"} -f -
+		fi || MyErr;;
+	s*)	if $tar_knows_use_compress_program
+		then	"$tarprg" -t $verbose $taruse "$zstd" -f "$f"
+		else	"$zstd" -d --stdout -- "$f" | \
+				"$tarprg" -t $verbose -f -
+		fi || MyErr;;
+	t*)	"$zstd" -t -v -- "$f";;
 	esac;;
 tar.bz2)
 	OptExternal bzip bzip2
@@ -445,20 +470,24 @@ bro)
 	OptExternal bro
 	case $mode in
 	u*)	IntoDir || return
-		if $mdir
-		then	x=$name.bro
-			"$bro" --decompress --input "$x" --output "$pwdname"
-		else	"$bro" --decompress --input "$f" --output "$pwdname"
-		fi || MyErr;;
+		"$bro" --decompress --input "$f" --output "$pwdname" || MyErr;;
 	s*)	MyErrNot;;
 	t*)	MyErrNot;;
+	esac;;
+zst)
+	OptExternal zstd
+	case $mode in
+	u*)	IntoDir || return
+		"$zstd" --d -o "$pwdname" -- "$f" || MyErr;;
+	s*)	"$zstd" -l -v -- "$f";;
+	t*)	"$zstd" -t -v -- "$f";;
 	esac;;
 bz2)
 	OptExternal bzip bzip2
 	case $mode in
 	u*)	IntoDir || return
 		if $mdir
-		then	x=$name.gz
+		then	x=$name.bz2
 			ln -s -- "$f" "$x" || cp -a -- "$f" "$x" \
 				&& "$bzip" -d -- "$x"
 		else	"$bzip" -d -k -c -- "$f" >"$pwdname"

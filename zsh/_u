@@ -22,4 +22,4 @@ _arguments -s -S -A '-*' : \
 '-p[ignore GNUTARVERSION]' \
 '-P[print output for GNUTARVERSION]' \
 '-q[quiet]' \
-'*:archives:_files -g "*.(tar|TAR|z|bro|brotli|tbr|bz2|bz|tbz2|tbz|gz|tgz|taz|dir|7z|t7z|lz|lzm|lzma|xz|tlz|txz|lrz|tlr|tlrz|lha|lzh|arj|arz|zip|jar|xpi|crate|cra|apk|okular|rar|Z|BRO|BROTLI|TBR|BZ2|BZ|TBZ2|TBZ|GZ|TGZ|TAZ|DIR|7Z|T7Z|LZ|LZM|LZMA|XZ|TLZ|TXZ|LRZ|TLR|TLRZ|LHA|LZH|ARJ|ARZ|ZIP|JAR|XPI|CRATE|CRA|APK|OKULAR|RAR)(-.)"'
+'*:archives:_files -g "*.(tar|TAR|z|bro|brotli|tbr|zst|zstd|tzst|tzstd|tzs|bz2|bz|tbz2|tbz|gz|tgz|taz|dir|7z|t7z|lz|lzm|lzma|xz|tlz|txz|lrz|tlr|tlrz|lha|lzh|arj|arz|zip|jar|xpi|crate|cra|apk|okular|rar|Z|BRO|BROTLI|TBR|ZST|ZSTD|TZST|TZSTD|TZS|BZ2|BZ|TBZ2|TBZ|GZ|TGZ|TAZ|DIR|7Z|T7Z|LZ|LZM|LZMA|XZ|TLZ|TXZ|LRZ|TLR|TLRZ|LHA|LZH|ARJ|ARZ|ZIP|JAR|XPI|CRATE|CRA|APK|OKULAR|RAR)(-.)"'
