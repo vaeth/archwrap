@@ -246,14 +246,14 @@ Dopack() {
 			|| Errunp "$gziptext" "$nameb"
 	fi
 	Compare
-	nameb=$destname.$tbzapp
+	nameb=$destname.$tbrapp
 	if $tbrnow
 	then	EchoCond "Creating $nameb"
 		brotlibest --input "$destname.tar" --output "$nameb" \
 			|| Errunp 'brotli' "$nameb"
 	fi
 	Compare
-	nameb=$destname.$svzapp
+	nameb=$destname.$tbzapp
 	if $tbznow
 	then	EchoCond "Creating $nameb"
 		bzipbest -k -c -- "$destname.tar" >"$nameb" \
