@@ -149,11 +149,11 @@ Getf() {
 	test -f "$f" && return
 	for i in '' .tar .TAR
 	do	for j in \
-			z bro brotli tbr zst zstd tzs tzst tzstd \
+			z br bro brotli tbr zst zstd tzs tzst tzstd \
 			bz2 bz tbz2 tbz gz tgz taz dir \
 			7z t7z lz lzm lzma xz tlz txz lrz tlr tlrz lha lzh \
 			arj arz zip jar xpi crate cra apk okular rar \
-			Z BRO BROTLI TBR ZST ZSTD TZS TZST TZSTD \
+			Z BR BRO BROTLI TBR ZST ZSTD TZS TZST TZSTD \
 			BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR \
 			7Z T7Z LZ LZM LZMA XZ TLZ TXZ LRZ TLR TLRZ LHA LZH \
 			ARJ ARZ ZIP JAR XPI CRATE CRA APK OKULAR RAR
@@ -219,7 +219,7 @@ DoCases() {
 		typ='tar.gz'
 		full=:;;
 	*.tbr|*.TBR)
-		typ='tar.bro'
+		typ='tar.br'
 		full=:;;
 	*.tzs|*.tzst|*.tzstd|*.TZS|*.TZST|*.TZSTD)
 		typ='tar.zst'
@@ -241,8 +241,8 @@ DoCases() {
 		full=:;;
 	*.gz|*.z|*.GZ|*.Z)
 		typ='gz';;
-	*.bro|*.brotli|*.BRO|*.BROTLI)
-		typ='bro';;
+	*.br|*.bro|*.brotli|*.BR|*.BRO|*.BROTLI)
+		typ='br';;
 	*.zst|*.zstd|*.ZST|*.ZSTD)
 		typ='zst';;
 	*.bz|*.bz2|*.BZ|*.BZ2)
@@ -323,7 +323,7 @@ tar.gz)
 		fi;;
 	t*)	"$gzip" -t -v -- "$f";;
 	esac || MyErr;;
-tar.bro)
+tar.br)
 	OptExternal bro
 	case $mode in
 	u*)	IntoDir || return
@@ -466,7 +466,7 @@ gz)
 	s*)	"$gzip" -l -v -- "$f";;
 	t*)	"$gzip" -t -v -- "$f";;
 	esac || MyErr;;
-bro)
+br)
 	OptExternal bro
 	case $mode in
 	u*)	IntoDir || return
@@ -478,7 +478,7 @@ zst)
 	OptExternal zstd
 	case $mode in
 	u*)	IntoDir || return
-		"$zstd" --d -o "$pwdname" -- "$f" || MyErr;;
+		"$zstd" --decompress -o "$pwdname" -- "$f" || MyErr;;
 	s*)	"$zstd" -l -v -- "$f";;
 	t*)	"$zstd" -t -v -- "$f";;
 	esac;;

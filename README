@@ -55,7 +55,7 @@ Some examples showing the standard usage:
       tard  directory(s)
       zipd  directory(s)
       gzipd directory(s) (uses .tar.gz   extension)
-      brod  directory(s) (uses .tar.bro  extension)
+      brd   directory(s) (uses .tar.br   extension)
       bzipd directory(s) (uses .tar.bz2  extension)
       lzmad directory(s) (uses .tar.lzma extension)
       zstdd directory(s) (uses .tar.zst  extension)

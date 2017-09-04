@@ -110,7 +110,7 @@ do	case $opt in
 	q)	quiet=:;;
 	Q)	quick=:;;
 	X)	tgzapp='tar.gz'
-		tbrapp='tar.bro'
+		tbrapp='tar.br'
 		tbzapp='tar.bz2'
 		svzapp='tar.7z'
 		lzmapp='tar.lzma'

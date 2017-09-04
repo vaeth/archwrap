@@ -12,7 +12,7 @@ Create archive ./zipdir.tgz with contents of zipdir
          The typical call is -@ user@machine: or -@ user@mach:/tmp/
          to use remote connection via rsh (GNU tar) resp. ssh (star)
 -R PATH  store output in PATH; use e.g. -R - for piping to stdout
--B use brotli   (archivename is ./zipdir.tbr or ./zipdir.tar.bro)
+-B use brotli   (archivename is ./zipdir.tbr or ./zipdir.tar.br)
 -g use zopfli   (archivename is ./zipdir.tgz or ./zipdir.tar.gz)
 -Q quick: Use gzip instead of zopfli (even if zopfli is available)
 -b use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)
@@ -57,7 +57,9 @@ quiet=false
 quick=false
 calc_version_only=false
 case ${0##*/} in
-*bro*)
+*tbr*)
+	comp=B;;
+*br*)
 	comp=B
 	xnames=:;;
 *lzma*|*.*lz*)
@@ -85,8 +87,6 @@ case ${0##*/} in
 *.*lr*)
 	comp=r
 	xnames=:;;
-*tbr*)
-	comp=B;;
 *tbz*)
 	comp=b;;
 *tgz*)
@@ -215,7 +215,7 @@ $tarcomp || ! $tar_needs_errfile || errfile=:
 if $xnames
 then	case $comp in
 	g)	ext='tar.gz';;
-	B)	ext='tar.bro';;
+	B)	ext='tar.br';;
 	b)	ext='tar.bz2';;
 	z)	ext='tar.zst';;
 	7)	ext='tar.7z';;
@@ -290,14 +290,14 @@ MainLoop() {
 }
 
 StripDirname() {
-	for strip in taz tgz tbz dir tlz tlrz tlr tzst tzs tbr tbro
+	for strip in taz tgz tbz dir tlz tlrz tlr tzst tzs tbr
 	do	case $dirname in
 		*."$strip")
 			dirname=${dirname%.*}
 			return;;
 		esac
 	done
-	for strip in z gz bz bz2 7z t7z lz lzm lzma lrz zst bro
+	for strip in z gz bz bz2 7z t7z lz lzm lzma lrz zst br bro brotli
 	do	case $dirname in
 		*.tar."$strip")
 			dirname=${dirname%.*.*}
