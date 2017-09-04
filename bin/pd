@@ -16,15 +16,18 @@ where option is one of the following:
 -A   select all compressors except plain tar
 -N   use plain owner name instead of numerical value for .tar
 -S/T use star/tar (default is as in tgzd script)
--t/U select/unselect tar (*.tar is not deleted, even if it is longer)
+-t/U select/unselect tar (i.e. *.tar is not deleted, even if it is longer)
 -z/Z select/unselect zip
 -o/O select/unselect brotli
--b/B select/unselect bzip (by default not selected)
+-y/Y select/unselect zstd
+-b/B select/unselect bzip
 -g/G select/unselect gzip
 -7// select/unselect 7z
 -l/L select/unselect lzma
 -w/W select/unselect xzd
 -r/R select/unselect lrzip
+-P   Unselect less widespread archivers (default if called as ppd),
+     currently: 7z brotli lrzip lzma xz zstd
 -p   assume that already existing archives contain correct contents
 -F   symbolic links are stored as such (default)
 -f   symbolic links are stored as files
@@ -43,6 +46,7 @@ tbzapp='tbz'
 svzapp='t7z'
 lzmapp='tlz'
 txzapp='txz'
+tzsapp='tzs'
 lrzapp='tlr'
 showonly=false
 preserv=false
@@ -66,23 +70,43 @@ Selectall() {
 	withsvz=:
 	withlzm=:
 	withtxz=:
+	withtzs=:
 	withlrz=:
+	#withtar=:
+}
+Selectnone() {
+	withzip=false
+	withtgz=false
+	withtbr=false
+	withtbz=false
+	withsvz=false
+	withlzm=false
+	withtxz=false
+	withtzs=false
+	withlrz=false
+	#withtar=false
+}
+DeselectHeavy() {
+	withsvz=false
+	withlrz=false
+	withlzm=false
+	withtbr=false
+	withtzs=false
+	withtxz=false
 }
 
 Selectall
 withtar=false
 case ${0##*/} in
 *ppd*)
-	withsvz=false
-	withlrz=false
-	withlzm=false
-	withtxz=false;;
+	DeselectUnpopular;;
 esac
 
 OPTIND=1
-while getopts 'vqQXdcCSTsnaA7/lLrWwRNtUzZoObBgGpFf0512486EhH' opt
+while getopts 'vPqQXdcCSTsnaA7/lLrYyWwRNtUzZoObBgGpFf0512486EhH' opt
 do	case $opt in
 	v)	verbose=:;;
+	P)	DeselectUnpopular;;
 	q)	quiet=:;;
 	Q)	quick=:;;
 	X)	tgzapp='tar.gz'
@@ -91,17 +115,13 @@ do	case $opt in
 		svzapp='tar.7z'
 		lzmapp='tar.lzma'
 		txzapp='tar.xz'
+		tzsapp='tar.zst'
 		lrzapp='tar.lrz';;
 	d)	withparent='-d';;
 	c)	secmode='-c';;
 	C)	control='-C';;
 	s)	showonly=:;;
-	n)	withzip=false
-		withtgz=false
-		withtbz=false
-		withsvz=false
-		withlzm=false
-		withlrz=false
+	n)	Selectnone
 		withtar=false;;
 	a)	Selectall
 		withtar=:;;
@@ -116,7 +136,8 @@ do	case $opt in
 	g)	withtgz=:;;
 	7)	withsvz=:;;
 	l)	withlzm=:;;
-	l)	withtxz=:;;
+	w)	withtxz=:;;
+	y)	withtzs=:;;
 	r)	withlrz=:;;
 	T)	nostar='-T';;
 	U)	withtar=false;;
@@ -127,6 +148,7 @@ do	case $opt in
 	/)	withsvz=false;;
 	L)	withlzm=false;;
 	W)	withtxz=false;;
+	Y)	withtzs=false;;
 	R)	withlrz=false;;
 	p)	preserv=:;;
 	F)	linksresolve=;;
@@ -212,6 +234,7 @@ Dopack() {
 	svznow=$withsvz
 	lzmnow=$withlzm
 	txznow=$withtxz
+	tzsnow=$withtzs
 	lrznow=$withlrz
 	if $preserv
 	then	$zipnow && test -s "$destname.zip" && zipnow=false
@@ -220,9 +243,12 @@ Dopack() {
 		$tbznow && test -s "$destname.$tbzapp" && tbznow=false
 		$svznow && test -s "$destname.$svzapp" && svznow=false
 		$lzmnow && test -s "$destname.$lzmapp" && lzmnow=false
+		$txznow && test -s "$destname.$txzapp" && txznow=false
+		$tzsnow && test -s "$destname.$txzapp" && tzsnow=false
 		$lrznow && test -s "$destname.$lrzapp" && lrznow=false
 	fi
-	if $tgznow || $tbrnow || $tbznow || $svznow || $lzmnow || $lrznow
+	if $tgznow || $tbrnow || $tbznow || $svznow || $lzmnow || \
+		$txznow || $tzsnow || $lrznow
 	then	tarnow=:
 	fi
 	$preserv && $tarnow && test -s "$destname.tar" && tarnow=false
@@ -242,7 +268,7 @@ Dopack() {
 	if $tgznow
 	then	EchoCond "Creating $nameb"
 		CalcGzipbest $quick
-		"$gzipbest" -c -- "$destname.tar" >"$nameb" \
+		"$gzipbest" -c -- "$destname.tar" >|"$nameb" \
 			|| Errunp "$gziptext" "$nameb"
 	fi
 	Compare
@@ -256,7 +282,7 @@ Dopack() {
 	nameb=$destname.$tbzapp
 	if $tbznow
 	then	EchoCond "Creating $nameb"
-		bzipbest -k -c -- "$destname.tar" >"$nameb" \
+		bzipbest -k -c -- "$destname.tar" >|"$nameb" \
 			|| Errunp 'bzip2' "$nameb"
 	fi
 	Compare
@@ -281,7 +307,14 @@ Dopack() {
 	if $txznow
 	then	EchoCond "Creating $nameb"
 		xzbest -k -c -- "$destname.tar" >"$nameb" \
-			|| Errunp 'lzma' "$nameb"
+			|| Errunp 'xz' "$nameb"
+	fi
+	Compare
+	nameb=$destname.$tzsapp
+	if $tzsnow
+	then	EchoCond "Creating $nameb"
+		zstdbest -o "$nameb" <"$destname.tar" \
+			|| Errunp 'zstd' "$nameb"
 	fi
 	Compare
 	nameb=$destname.$lrzapp

@@ -1,4 +1,4 @@
-#compdef 7zd brod bzipd tzsd tzstd gzipd lrzd lzmad t7zd tard tbrd tbzd tgzd tlrd tlzd txzd xzd
+#compdef 7zd brod bzipd gzipd lrzd lzmad t7zd tard tbrd tbzd tgzd tlrd tlzd txzd tzsd xzd zstdd
 _arguments -s -S -A '-*' : \
 '(* -)'{'-h','-H'}'[help]' \
 '-R+[store output in PATH; use e.g. -R - for piping to stdout]:output-path:_files -/' \

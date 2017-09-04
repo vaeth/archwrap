@@ -26,8 +26,10 @@ _arguments -s -S -A '-*' : \
 '-/[unselect 7z]' \
 '-l[select lzma]' \
 '-L[unselect lzma]' \
-'-w[select xzd]' \
-'-W[unselect xzd]' \
+'-w[select xz]' \
+'-W[unselect xz]' \
+'-y[select zstd]' \
+'-Y[unselect zstd]' \
 '-r[select lrzip]' \
 '-R[unselect lrzip]' \
 '-p[assume that already existing archives contain correct contents]' \

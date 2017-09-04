@@ -68,7 +68,7 @@ case ${0##*/} in
 *xz*)
 	comp=x
 	xnames=:;;
-*tzst*)
+*zstdd*)
 	comp=z
 	xnames=:;;
 *tzs*)
@@ -327,19 +327,19 @@ DoDir() {
 	case ${comp:-R} in
 	R)	return;;
 	g)	CalcGzipbest $quick
-		"$gzipbest" -c -- "$archive" >"$name.$ext";;
+		"$gzipbest" -c -- "$archive" >|"$name.$ext";;
 	B)	OptExternal brotlibest
 		"$brotlibest" --input "$archive" --output "$name.$ext";;
 	b)	OptExternal bzipbest
-		"$bzipbest" -k -c -- "$archive" >"$name.$ext";;
+		"$bzipbest" -k -c -- "$archive" >|"$name.$ext";;
 	z)	OptExternal zstdbest
-		"$zstdbest" -o "$name.$ext" -- "$archive";;
+		"$zstdbest" -o "$name.$ext" <"$archive";;
 	7)	OptExternal sevenzbest 7zbest
-		"$sevenzbest" <"$archive" >"$name.$ext";;
+		"$sevenzbest" <"$archive" >|"$name.$ext";;
 	l)	OptExternal lzmabest
-		"$lzmabest" -k -c -- "$archive" >"$name.$ext";;
+		"$lzmabest" -k -c -- "$archive" >|"$name.$ext";;
 	x)	OptExternal xzbest
-		"$xzbest" -k -c -- "$archive" >"$name.$ext";;
+		"$xzbest" -k -c -- "$archive" >|"$name.$ext";;
 	r)	OptExternal lrzip
 		"$lrzip" -L 9 -o "$name.$ext" -- "$archive";;
 	esac || {

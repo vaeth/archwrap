@@ -1,6 +1,6 @@
 
 archwrap - A collection of POSIX shell scripts to invoke archiver programs like
-           (s)tar/gzip/bzip2/xz/zip/7z/lzma/lrzip/arj/zoo/brotli/zopfli ...
+           (s)tar/gzip/bzip2/xz/zip/7z/lzma/lrzip/arj/zoo/brotli/zopfli/zstd
 
 Author: Martin Väth <vaeth@mvath.de>
 
@@ -43,18 +43,22 @@ Some examples showing the standard usage:
       (each directory is put into a separate archive) and keeps
       only the "best" version. Lots of options control the details:
       Invoke "pd"/"ppd" without any arguments for a list of them.
-      ppd (in contrast to pd) only chooses the most popular archivers.
+      ppd (in contrast to pd) does not attempt less widespread archivers.
    b) tgzd  directory(s) (actually uses zopfli unless -Q is specified)
+      tbrd  directory(s)
       tbzd  directory(s)
       tlzd  directory(s)
       t7zd  directory(s)
       tlrd  directory(s)
       txzd  directory(s)
+      tzsd  directory(s)
       tard  directory(s)
       zipd  directory(s)
       gzipd directory(s) (uses .tar.gz   extension)
+      brod  directory(s) (uses .tar.bro  extension)
       bzipd directory(s) (uses .tar.bz2  extension)
       lzmad directory(s) (uses .tar.lzma extension)
+      zstdd directory(s) (uses .tar.zst  extension)
       xzd   directory(s) (uses .tar.xz   extension)
       7zd   directory(s) (uses .tar.7z   extension)
       lrzd  directory(s) (uses .tar.lrz  extension)
