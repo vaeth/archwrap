@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# This script is part of Martin V\"ath's archwrap project.
+set -u
+if [ $# -eq 0 ]
+then	bro --decompress | less
+else	bro --decompress --input "$@" | less
+fi
