@@ -1,27 +1,34 @@
-#compdef bro unbro brocat broless brotlibest
-local service_opts
+#compdef bro unbro brobest unbrotli brotli brotlibest
+local service_opts service_add service_compress service_args
 service_opts=(
 '(-)'{'--help','-h'}'[print a brief help]'
 {'(-f)--force','(--force)-f'}'[override existing output file]'
 {'(-v)--verbose','(--verbose)-v'}'[verbose mode]'
 '--no-copy-stat[do not attempt to preserve filestats]'
-{'(-i --in)--input','(-i --input)--in','(--in --input)-i'}'[use specified file instead of stdin]:file:_files'
-{'(-o --out)--output','(-o --output)--out','(--out --output)-o'}'[use specified file instead of stdout]:file:_files'
 '--custom-dictionary[use specified custom dictionary]:dictionary file:_files'
 )
-case $service in
-(*cat|*less)
-	words[1]=--input
-	words=(unbro $words)
-	((++CURRENT));;
-(un*)
-	:;;
-(*)
-	service_opts+=(
+service_add=(
+{'(-i --in)--input','(-i --input)--in','(--in --input)-i'}'[use specified file instead of stdin]:file:_files'
+{'(-o --out)--output','(-o --output)--out','(--out --output)-o'}'[use specified file instead of stdout]:file:_files'
+)
+service_compress=(
 {'(-q)--quality','(--quality)-q'}'[use specified quality (0-99)]:quality:(99)'
 {'(-r)--repeat','(--repeat)-r'}'[use specified repetitions (0-99)]:repetitions:(99)'
 {'(-w)--window','(--window)-w'}'[use specified log. window size (10-24)]:windows size:(24)'
 {'(-d --uncompress)--decompress','(-d --decompress)--uncompress','(--decompress --uncompress)-d'}'[decompress instead of compressing]'
-);;
+)
+service_args=(
+'*:files:_files'
+)
+case $service in
+(un*)
+	service_compress=()
+;|
+(*brotli*)
+	service_add=()
+;;
+(*)
+	service_args=()
+;;
 esac
-_arguments : $service_opts
+_arguments : $service_opts $service_add $service_compress $service_args

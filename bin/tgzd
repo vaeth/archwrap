@@ -142,7 +142,7 @@ do	case $opt in
 done
 shift $(( $OPTIND - 1 ))
 
-unset tarprg xzbest brotlibest bzipbest gzipbest sevenzbest lzmabest lrzip zstdbest
+unset tarprg xzbest brobest bzipbest gzipbest sevenzbest lzmabest lrzip zstdbest
 
 if $calc_version_only
 then	CalcGnuTarVersion && printf '%s' "$GNUTARVERSION"
@@ -193,8 +193,8 @@ else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 	! $tar_knows_use_compress_program || case $comp in
 	x)	OptExternal xzbest
 		Push taropts '--use-compress-program' "$xzbest";;
-	B)	OptExternal brotlibest
-		Push taropts '--use-compress-program' "$brotlibest";;
+	B)	OptExternal brobest
+		Push taropts '--use-compress-program' "$brobest";;
 	b)	OptExternal bzipbest
 		Push taropts '--use-compress-program' "$bzipbest";;
 	z)	OptExternal zstdbest
@@ -328,8 +328,8 @@ DoDir() {
 	R)	return;;
 	g)	CalcGzipbest $quick
 		"$gzipbest" -c -- "$archive" >|"$name.$ext";;
-	B)	OptExternal brotlibest
-		"$brotlibest" --input "$archive" --output "$name.$ext";;
+	B)	OptExternal brobest
+		"$brobest" --input "$archive" --output "$name.$ext";;
 	b)	OptExternal bzipbest
 		"$bzipbest" -k -c -- "$archive" >|"$name.$ext";;
 	z)	OptExternal zstdbest

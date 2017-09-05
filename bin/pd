@@ -275,7 +275,7 @@ Dopack() {
 	nameb=$destname.$tbrapp
 	if $tbrnow
 	then	EchoCond "Creating $nameb"
-		brotlibest --input "$destname.tar" --output "$nameb" \
+		brobest --input "$destname.tar" --output "$nameb" \
 			|| Errunp 'brotli' "$nameb"
 	fi
 	Compare

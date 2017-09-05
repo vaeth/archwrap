@@ -1,0 +1,83 @@
+#!/usr/bin/env sh
+# This script is part of Martin V\"ath's archwrap project.
+set -u
+bro=bro
+decompress=
+case ${0##*/} in
+un*|de*)
+	decompress=-d;;
+*best*)
+	bro=brobest;;
+esac
+PushA_=`push.sh 2>/dev/null` || Fatal \
+"push.sh from https://github.com/vaeth/push (v2.0 or newer) required"
+eval "$PushA_"
+Push -c args $decompress
+while [ $# -ne 0 ]
+do	case $1 in
+	--)
+		shift
+		break;;
+	-h|--help)
+		exec $bro "$1"
+		exit;;
+	-d|--decompress|--uncompress)
+		decompress=-d
+		Push args "$1"
+		shift
+		continue;;
+	-f|--force|--no-copy-stat)
+		Push args "$1"
+		shift
+		continue;;
+	--custom-dictionary|-q|--quality|-r|--repeat|-w|--window)
+		[ $# -gt 1 ] || {
+			exec $bro -h
+			exit
+		}
+		push args "$1" "$2"
+		shift 2
+		continue;;
+	esac
+	break
+done
+Echo() {
+	printf '%s\n' "$*"
+}
+Msg() {
+	Echo "${0##*/}: $*" >&2
+}
+Warning() {
+	Msg "warning: $*"
+}
+Die() {
+	Msg "fatal: $*"
+	exit 1
+}
+for i
+do	test -f "$i" || {
+		Warning "ignoring non-file $i"
+		continue
+	}
+	test -r "$i" || {
+		Warning "ignoring unreadable $i"
+		continue
+	}
+	if [ -z "$decompress" ]
+	then	out=$i.br
+	else	out=${i%.br}
+		if [ "$out" = "$i" ]
+		then	out=${i%.BR}
+			[ "$out" != "$i" ] || out=
+		fi
+		[ -n "$out" ] || {
+			Warning "ignoring $i (wrong extension)"
+			continue
+		}
+	fi
+	set -- a $args
+	shift
+	$bro ${1+"$@"} --input "$i" --output "$out" \
+		|| Die "failed to compress $i"
+	test -f "$out" && rm -f -- "$i" || Die "failed to remove $i"
+done

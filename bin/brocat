@@ -3,5 +3,12 @@
 set -u
 if [ $# -eq 0 ]
 then	exec bro --decompress
-else	exec bro --decompress --input "$@"
+	exit
 fi
+case $1 in
+--)
+	shift;;
+esac
+for i
+do	bro --decompress --input "$i"
+done
