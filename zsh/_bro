@@ -17,18 +17,21 @@ service_compress=(
 {'(-w)--window','(--window)-w'}'[use specified log. window size (10-24)]:windows size:(24)'
 {'(-d --uncompress)--decompress','(-d --decompress)--uncompress','(--decompress --uncompress)-d'}'[decompress instead of compressing]'
 )
-service_args=(
-'*:files:_files'
-)
+serve_args=()
 case $service in
 (un*)
 	service_compress=()
 ;|
 (*brotli*)
-	service_add=()
-;;
-(*)
-	service_args=()
+	service_add=(
+{'(-k --rm)--keep','(--keep --rm)-k'}'[keep input file]'
+'(-k --keep)--rm[remove input file (default)]'
+'--chown[chown to specified owner\[:\[group\]\]]:owner:(root:root)'
+'--chmod[chmod to specified mode]:mode:(644)'
+)
+	service_args=(
+'*:files:_files'
+)
 ;;
 esac
 _arguments : $service_opts $service_add $service_compress $service_args
