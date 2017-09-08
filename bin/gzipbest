@@ -1,7 +1,4 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
-which=`command -v which` || which=
-[ x"$which" = x'which' ] && gzip=`which gzip` \
-		|| gzip=`command -v gzip` || gzip=
-exec "${gzip:-gzip}" --best ${1+"$@"}
+exec gzip --best ${1+"$@"}

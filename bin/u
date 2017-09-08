@@ -150,11 +150,11 @@ Getf() {
 	for i in '' .tar .TAR
 	do	for j in \
 			z br bro brotli tbr zst zstd tzs tzst tzstd \
-			bz2 bz tbz2 tbz gz tgz taz dir \
+			bz2 bz tbz2 tbz gz tgz taz dir tl4 tz4 tlz4 lz4 \
 			7z t7z lz lzm lzma xz tlz txz lrz tlr tlrz lha lzh \
 			arj arz zip jar xpi crate cra apk okular rar \
 			Z BR BRO BROTLI TBR ZST ZSTD TZS TZST TZSTD \
-			BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR \
+			BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR TL4 TZ4 TLZ4 LZ4 \
 			7Z T7Z LZ LZM LZMA XZ TLZ TXZ LRZ TLR TLRZ LHA LZH \
 			ARJ ARZ ZIP JAR XPI CRATE CRA APK OKULAR RAR
 		do	f=$1$i.$j
@@ -224,6 +224,9 @@ DoCases() {
 	*.tzs|*.tzst|*.tzstd|*.TZS|*.TZST|*.TZSTD)
 		typ='tar.zst'
 		full=:;;
+	*.tl4|*.tz4|*.tlz4|*.TL4|*.TZ4|*.TLZ4)
+		typ='tar.lz4'
+		full=:;;
 	*.tbz|*.tbz2|*.TBZ|*.TBZ2)
 		typ='tar.bz2'
 		full=:;;
@@ -245,6 +248,8 @@ DoCases() {
 		typ='br';;
 	*.zst|*.zstd|*.ZST|*.ZSTD)
 		typ='zst';;
+	*.lz4|*.Lz4)
+		typ='lz4';;
 	*.bz|*.bz2|*.BZ|*.BZ2)
 		typ='bz2';;
 	*.lm|*.lzm|*.lzma|*.LM|*.LZM|*.LZMA)
@@ -290,7 +295,7 @@ DoCases() {
 	return 0
 }
 
-unset bzip bro zstd gzip lzma xz lrzip za unzip unarj lha unrar
+unset bzip bro zstd lz4 gzip lzma xz lrzip za unzip unarj lha unrar
 DoIt() {
 	case $typ in
 tar)
@@ -349,15 +354,31 @@ tar.zst)
 		shift
 		if $tar_knows_use_compress_program
 		then	"$tarprg" -x $verboseopt $taruse "$zstd" ${1+"$@"} -f "$f"
-		else	"$zstd" -d --stdout -- "$f" | \
+		else	"$zstd" -d -c -- "$f" | \
 				"$tarprg" -x $verboseopt ${1+"$@"} -f -
 		fi || MyErr;;
 	s*)	if $tar_knows_use_compress_program
 		then	"$tarprg" -t $verbose $taruse "$zstd" -f "$f"
-		else	"$zstd" -d --stdout -- "$f" | \
-				"$tarprg" -t $verbose -f -
+		else	"$zstd" -d -c -- "$f" | "$tarprg" -t $verbose -f -
 		fi || MyErr;;
 	t*)	"$zstd" -t -v -- "$f";;
+	esac;;
+tar.lz4)
+	OptExternal lz4
+	case $mode in
+	u*)	IntoDir || return
+		eval "set -- a $taropts"
+		shift
+		if $tar_knows_use_compress_program
+		then	"$tarprg" -x $verboseopt $taruse "$lz4" ${1+"$@"} -f "$f"
+		else	"$lz4" -d -c "$f" | \
+				"$tarprg" -x $verboseopt ${1+"$@"} -f -
+		fi || MyErr;;
+	s*)	if $tar_knows_use_compress_program
+		then	"$tarprg" -t $verbose $taruse "$lz4" -f "$f"
+		else	"$lz4" -d -c "$f" | "$tarprg" -t $verbose -f -
+		fi || MyErr;;
+	t*)	"$lz4" -t -v -- "$f";;
 	esac;;
 tar.bz2)
 	OptExternal bzip bzip2
@@ -478,9 +499,17 @@ zst)
 	OptExternal zstd
 	case $mode in
 	u*)	IntoDir || return
-		"$zstd" --decompress -o "$pwdname" -- "$f" || MyErr;;
+		"$zstd" -d -o "$pwdname" -- "$f";;
 	s*)	"$zstd" -l -v -- "$f";;
 	t*)	"$zstd" -t -v -- "$f";;
+	esac || MyErr;;
+lz4)
+	OptExternal lz4
+	case $mode in
+	u*)	IntoDir || return
+		"$lz4" -d "$f" "$pwdname" || MyErr;;
+	s*)	MyErrNot;;
+	t*)	"$lz4" -t -v "$f" || MyErr;;
 	esac;;
 bz2)
 	OptExternal bzip bzip2

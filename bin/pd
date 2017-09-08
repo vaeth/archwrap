@@ -22,6 +22,7 @@ where option is one of the following:
 -y/Y select/unselect zstd
 -b/B select/unselect bzip
 -g/G select/unselect gzip
+-i/I select/unselect lz4
 -7// select/unselect 7z
 -l/L select/unselect lzma
 -w/W select/unselect xzd
@@ -40,10 +41,13 @@ where option is one of the following:
 -Q   quick: Use gzip instead of zopfli (even if zopfli is available)"
 	exit ${1:-1}
 }
+unset zipd tgzd gzipbest brobest bzipbest za lz4best \
+	lzmabest xzbest zstdbest lrzip
 tgzapp='tgz'
 tbrapp='tbr'
 tbzapp='tbz'
 svzapp='t7z'
+tz4app='tz4'
 lzmapp='tlz'
 txzapp='txz'
 tzsapp='tzs'
@@ -68,6 +72,7 @@ Selectall() {
 	withtbr=:
 	withtbz=:
 	withsvz=:
+	withtz4=:
 	withlzm=:
 	withtxz=:
 	withtzs=:
@@ -80,20 +85,23 @@ Selectnone() {
 	withtbr=false
 	withtbz=false
 	withsvz=false
+	withtz4=false
 	withlzm=false
 	withtxz=false
 	withtzs=false
 	withlrz=false
 	#withtar=false
 }
-DeselectHeavy() {
+DeselectUnpopular() {
 	withsvz=false
+	withtz4=false
 	withlrz=false
 	withlzm=false
 	withtbr=false
 	withtzs=false
 	withtxz=false
 }
+
 
 Selectall
 withtar=false
@@ -103,7 +111,7 @@ case ${0##*/} in
 esac
 
 OPTIND=1
-while getopts 'vPqQXdcCSTsnaA7/lLrYyWwRNtUzZoObBgGpFf0512486EhH' opt
+while getopts 'vPqQXdcCSTsnaA7/iIlLrYyWwRNtUzZoObBgGpFf0512486EhH' opt
 do	case $opt in
 	v)	verbose=:;;
 	P)	DeselectUnpopular;;
@@ -113,6 +121,7 @@ do	case $opt in
 		tbrapp='tar.br'
 		tbzapp='tar.bz2'
 		svzapp='tar.7z'
+		tz4app='tar.lz4'
 		lzmapp='tar.lzma'
 		txzapp='tar.xz'
 		tzsapp='tar.zst'
@@ -135,6 +144,7 @@ do	case $opt in
 	b)	withtbz=:;;
 	g)	withtgz=:;;
 	7)	withsvz=:;;
+	i)	withtz4=:;;
 	l)	withlzm=:;;
 	w)	withtxz=:;;
 	y)	withtzs=:;;
@@ -146,6 +156,7 @@ do	case $opt in
 	B)	withtbz=false;;
 	G)	withtgz=false;;
 	/)	withsvz=false;;
+	I)	withtz4=false;;
 	L)	withlzm=false;;
 	W)	withtxz=false;;
 	Y)	withtzs=false;;
@@ -218,7 +229,6 @@ Compare() {
 	Remove "$delname"
 }
 
-unset za lrzip
 Dopack() {
 	topack=${1%/}
 	if ! test -d "$topack"
@@ -232,6 +242,7 @@ Dopack() {
 	tbrnow=$withtbr
 	tbznow=$withtbz
 	svznow=$withsvz
+	tz4now=$withtz4
 	lzmnow=$withlzm
 	txznow=$withtxz
 	tzsnow=$withtzs
@@ -242,12 +253,13 @@ Dopack() {
 		$tbrnow && test -s "$destname.$tbrapp" && tbrnow=false
 		$tbznow && test -s "$destname.$tbzapp" && tbznow=false
 		$svznow && test -s "$destname.$svzapp" && svznow=false
+		$tz4now && test -s "$destname.$tz4app" && tz4now=false
 		$lzmnow && test -s "$destname.$lzmapp" && lzmnow=false
 		$txznow && test -s "$destname.$txzapp" && txznow=false
 		$tzsnow && test -s "$destname.$txzapp" && tzsnow=false
 		$lrznow && test -s "$destname.$lrzapp" && lrznow=false
 	fi
-	if $tgznow || $tbrnow || $tbznow || $svznow || $lzmnow || \
+	if $tgznow || $tbrnow || $tbznow || $svznow || $tz4now || $lzmnow || \
 		$txznow || $tzsnow || $lrznow
 	then	tarnow=:
 	fi
@@ -256,12 +268,14 @@ Dopack() {
 	namea=$destname.zip
 	if $zipnow
 	then	EchoCond "Creating $namea"
-		zipd $quietopt $withparent $linksresolve -- "$topack" \
+		OptExternal zipd
+		"$zipd" $quietopt $withparent $linksresolve -- "$topack" \
 			|| Errunp 'zipd' "$namea"
 	fi
 	if $tarnow
 	then	EchoCond "Creating $destname.tar"
-		tgzd -t$quickopt $quietopt $nostar $control $secmode $withparent $linksresolve $plainowner -- "$topack" \
+		OptExternal tgzd
+		"$tgzd" -t$quickopt $quietopt $nostar $control $secmode $withparent $linksresolve $plainowner -- "$topack" \
 			|| Errunp 'tgzd' "$destname.tar"
 	fi
 	nameb=$destname.$tgzapp
@@ -275,14 +289,16 @@ Dopack() {
 	nameb=$destname.$tbrapp
 	if $tbrnow
 	then	EchoCond "Creating $nameb"
-		brobest --input "$destname.tar" --output "$nameb" \
+		OptExternal brobest
+		"$brobest" --input "$destname.tar" --output "$nameb" \
 			|| Errunp 'brotli' "$nameb"
 	fi
 	Compare
 	nameb=$destname.$tbzapp
 	if $tbznow
 	then	EchoCond "Creating $nameb"
-		bzipbest -k -c -- "$destname.tar" >|"$nameb" \
+		OptExternal bzipbest
+		"$bzipbest" -k -c -- "$destname.tar" >|"$nameb" \
 			|| Errunp 'bzip2' "$nameb"
 	fi
 	Compare
@@ -296,24 +312,35 @@ Dopack() {
 		fi || Errunp '7za' "$nameb"
 	fi
 	Compare
+	nameb=$destname.$tz4app
+	if $tz4now
+	then	EchoCond "Creating $nameb"
+		OptExternal lz4best
+		"$lz4best" $quietopt "$nameb" "$destname.tar" \
+			|| Errunp 'lz4' "$nameb"
+	fi
+	Compare
 	nameb=$destname.$lzmapp
 	if $lzmnow
 	then	EchoCond "Creating $nameb"
-		lzmabest -k -c -- "$destname.tar" >"$nameb" \
+		OptExternal lzmabest
+		"$lzmabest" -k -c -- "$destname.tar" >"$nameb" \
 			|| Errunp 'lzma' "$nameb"
 	fi
 	Compare
 	nameb=$destname.$txzapp
 	if $txznow
 	then	EchoCond "Creating $nameb"
-		xzbest -k -c -- "$destname.tar" >"$nameb" \
+		OptExternal xzbest
+		"$xzbest" -k -c -- "$destname.tar" >"$nameb" \
 			|| Errunp 'xz' "$nameb"
 	fi
 	Compare
 	nameb=$destname.$tzsapp
 	if $tzsnow
 	then	EchoCond "Creating $nameb"
-		zstdbest -o "$nameb" <"$destname.tar" \
+		OptExternal zstdbest
+		"$zstdbest" $quietopt -o "$nameb" <"$destname.tar" \
 			|| Errunp 'zstd' "$nameb"
 	fi
 	Compare

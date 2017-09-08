@@ -18,6 +18,7 @@ Create archive ./zipdir.tgz with contents of zipdir
 -b use bzip2    (archivename is ./zipdir.tbz or ./zipdir.tar.bz2)
 -l use lzma     (archivename is ./zipdir.tlz or ./zipdir.tar.lzma)
 -L use xz       (archivename is ./zipdir.txz or ./zipdir.tar.xz)
+-4 use lz4      (archivename is ./zipdir.tz4 or ./zipdir.tar.lz4)
 -7 use 7z       (archivename is ./zipdir.t7z or ./zipdir.tar.7z)
 -r use lrzip    (archivename is ./zipdir.tlr or ./zipdir.tar.lrz)
 -z use zstd     (archivename is ./zipdir.tzs or ./zipdir.tar.zst)
@@ -62,46 +63,51 @@ case ${0##*/} in
 *br*)
 	comp=B
 	xnames=:;;
-*lzma*|*.*lz*)
-	comp=l
-	xnames=:;;
 *txz*)
 	comp=x;;
 *xz*)
 	comp=x
 	xnames=:;;
-*zstdd*)
-	comp=z
-	xnames=:;;
 *tzs*)
 	comp=z;;
-*bzip*|*.*bz*)
-	comp=b
+*zst*)
+	comp=z
 	xnames=:;;
-*gzip*|*.*gz*)
-	comp=g
+*tz4*|*tl4*|*tlz4*)
+	comp=4;;
+*lz4*)
+	comp=4
 	xnames=:;;
-*.*7z*)
-	comp=7
-	xnames=:;;
-*.*lr*)
-	comp=r
+*tlz*)
+	comp=l;;
+*lz*)
+	comp=l
 	xnames=:;;
 *tbz*)
 	comp=b;;
+*bz*)
+	comp=b
+	xnames=:;;
 *tgz*)
 	comp=g;;
-*7z*)
+*gz*)
+	comp=g
+	xnames=:;;
+*t7z*)
 	comp=7;;
-*lz*)
-	comp=l;;
-*lr*)
+*7z*)
+	comp=7
+	xnames=:;;
+*tlr*)
 	comp=r;;
+*lr*)
+	comp=r
+	xnames=:;;
 *tar*)
 	comp=;;
 esac
 OPTIND=1
-while getopts 'qQAF@:R:SETcCfdDnBzbg7lLzmrtpPsXxhH' opt
+while getopts 'qQAF@:R:SETcCfdDnBzbg74lLzmrtpPsXxhH' opt
 do	case $opt in
 	q)	quiet=:;;
 	Q)	quick=:;;
@@ -129,6 +135,7 @@ do	case $opt in
 	[lzm])	comp=l;;
 	L)	comp=x;;
 	7)	comp=7;;
+	4)	comp=4;;
 	r)	comp=r;;
 	X)	xnames=:;;
 	x)	xnames=false;;
@@ -142,7 +149,8 @@ do	case $opt in
 done
 shift $(( $OPTIND - 1 ))
 
-unset tarprg xzbest brobest bzipbest gzipbest sevenzbest lzmabest lrzip zstdbest
+unset tarprg xzbest brobest bzipbest gzipbest sevenzbest lzmabest lrzip \
+	zstdbest lz4best
 
 if $calc_version_only
 then	CalcGnuTarVersion && printf '%s' "$GNUTARVERSION"
@@ -183,7 +191,7 @@ then	Push taropts '-H=exustar'
 	b)	Push taropts '-bz'
 		STAR_COMPRESS_FLAG='-9'
 		export STAR_COMPRESS_FLAG;;
-	[xlrz7])
+	*)
 		tarcomp=false;;
 	esac
 else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
@@ -204,6 +212,8 @@ else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 		then	Push taropts '--use-compress-program' "$gzipbest"
 		else	tarcomp=false
 		fi;;
+	4)	OptExternal lz4best
+		Push taropts '--use-compress-program' "$lz4best";;
 	7)	OptExternal sevenzbest 7zbest
 		Push taropts '--use-compress-program' "$sevenzbest";;
 	l)	OptExternal lzmabest
@@ -219,6 +229,7 @@ then	case $comp in
 	b)	ext='tar.bz2';;
 	z)	ext='tar.zst';;
 	7)	ext='tar.7z';;
+	4)	ext='tar.lz4';;
 	l)	ext='tar.lzma';;
 	x)	ext='tar.xz';;
 	r)	ext='tar.lrz';;
@@ -230,6 +241,7 @@ else	case $comp in
 	b)	ext='tbz';;
 	z)	ext='tzs';;
 	7)	ext='t7z';;
+	4)	ext='tz4';;
 	l)	ext='tlz';;
 	x)	ext='txz';;
 	r)	ext='tlr';;
@@ -336,6 +348,8 @@ DoDir() {
 		"$zstdbest" -o "$name.$ext" <"$archive";;
 	7)	OptExternal sevenzbest 7zbest
 		"$sevenzbest" <"$archive" >|"$name.$ext";;
+	4)	OptExternal lz4best
+		"$lz4best" "$archive" "$name.$ext";;
 	l)	OptExternal lzmabest
 		"$lzmabest" -k -c -- "$archive" >|"$name.$ext";;
 	x)	OptExternal xzbest

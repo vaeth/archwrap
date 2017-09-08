@@ -1,18 +1,11 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
+l=xz
 case ${0##*/} in
-*xz*)	xzmode=:;;
-*lz*)	xzmode=false;;
-*)	xzmode=:;;
+*lz*)
+	l=lzma;;
 esac
-
-which=`command -v which` || which=
-MakeExternal() {
-	[ x"$which" = x'which' ] && eval $1=\`which $2\` \
-		|| eval $1=\`command -v $2\` || eval $1=
-	eval ": \${$1:=$2}"
-}
 
 CalcXz() {
 	xz_opt='--best'
@@ -51,8 +44,4 @@ else	Remove '--extreme'
 fi
 XZ_OPT='--extreme'
 export XZ_OPT
-if $xzmode
-then	MakeExternal l xz
-else	MakeExternal l lzma
-fi
 exec "$l" $xz_opt ${1+"$@"}

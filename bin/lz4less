@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
-exec 7za a -si -so -- ${1+"$@"}
+lz4cat "$@" | less
