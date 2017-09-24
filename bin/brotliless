@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
-brocat "$@" | less
+brotli -dcf -- ${1+"$@"} | less

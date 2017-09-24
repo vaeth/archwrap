@@ -295,7 +295,7 @@ DoCases() {
 	return 0
 }
 
-unset bzip bro zstd lz4 gzip lzma xz lrzip za unzip unarj lha unrar
+unset bzip brotli zstd lz4 gzip lzma xz lrzip za unzip unarj lha unrar
 DoIt() {
 	case $typ in
 tar)
@@ -329,23 +329,23 @@ tar.gz)
 	t*)	"$gzip" -t -v -- "$f";;
 	esac || MyErr;;
 tar.br)
-	OptExternal bro
+	OptExternal brotli
 	case $mode in
 	u*)	IntoDir || return
 		eval "set -- a $taropts"
 		shift
 		if $tar_knows_use_compress_program
-		then	"$tarprg" -x $verboseopt $taruse "$bro" ${1+"$@"} -f "$f"
-		else	"$bro" --decompress --input "$f" --no-copy-stat | \
+		then	"$tarprg" -x $verboseopt $taruse "$brotli" ${1+"$@"} -f "$f"
+		else	"$brotli" -d -c -- "$f" | \
 				"$tarprg" -x $verboseopt ${1+"$@"} -f -
-		fi || MyErr;;
+		fi;;
 	s*)	if $tar_knows_use_compress_program
-		then	"$tarprg" -t $verbose $taruse "$bro" -f "$f"
-		else	"$bro" --decompress --input "$f" --no-copy-stat | \
-				"$tarprg" -t $verbose -f -
-		fi || MyErr;;
-	t*)	MyErrNot;;
-	esac;;
+		then	"$tarprg" -t $verbose $taruse "$brotli" -f "$f"
+		else	"$brotli" -d -c -- "$f" | "$tarprg" -t $verbose -f -
+		fi;;
+	t*)	Echo "$f"
+		"$brotli" -t -v -- "$f";;
+	esac || MyErr;;
 tar.zst)
 	OptExternal zstd
 	case $mode in
@@ -488,12 +488,13 @@ gz)
 	t*)	"$gzip" -t -v -- "$f";;
 	esac || MyErr;;
 br)
-	OptExternal bro
+	OptExternal brotli
 	case $mode in
 	u*)	IntoDir || return
-		"$bro" --decompress --input "$f" --output "$pwdname" || MyErr;;
+		"$brotli" -d -o "$pwdname" -- "$f" || MyErr;;
 	s*)	MyErrNot;;
-	t*)	MyErrNot;;
+	t*)	Echo "$f"
+		"$brotli" -t -v -- "$f" || MyErr;;
 	esac;;
 zst)
 	OptExternal zstd

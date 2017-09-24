@@ -41,7 +41,7 @@ where option is one of the following:
 -Q   quick: Use gzip instead of zopfli (even if zopfli is available)"
 	exit ${1:-1}
 }
-unset zipd tgzd gzipbest brobest bzipbest za lz4best \
+unset zipd tgzd gzipbest brotlibest bzipbest za lz4best \
 	lzmabest xzbest zstdbest lrzip
 tgzapp='tgz'
 tbrapp='tbr'
@@ -289,8 +289,8 @@ Dopack() {
 	nameb=$destname.$tbrapp
 	if $tbrnow
 	then	EchoCond "Creating $nameb"
-		OptExternal brobest
-		"$brobest" --input "$destname.tar" --output "$nameb" \
+		OptExternal brotlibest
+		"$brotlibest" -o "$nameb" -- "$destname.tar" \
 			|| Errunp 'brotli' "$nameb"
 	fi
 	Compare
