@@ -1,4 +1,32 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
-exec zstd --ultra -22 ${1+"$@"}
+z=zstd
+case ${0##*/} in
+u*)
+	z=unzstd;;
+*cat)
+	z=zstdcat;;
+*mt)
+	z=zstdmt;;
+esac
+
+CalcZstd() {
+	zstd_opt='--long=31'
+	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
+		&& [ -n "${m:++}" ] || return
+	[ "$m" -gt 1800000 ] && return
+	if [ "$m" -gt 950000 ]
+	then	zstd_opt='--long=30'
+	elif [ "$m" -gt 400000 ]
+	then	zstd_opt='--long=29'
+	else	zstd_opt='--long=28'
+	fi
+}
+
+if [ -n "${ZSTD_OPT++}" ]
+then	zstd_opt=$ZSTD_OPT
+	unset ZSTD_OPT
+else	CalcZstd
+fi
+exec "$z" --ultra -22 $zstd_opt ${1+"$@"}

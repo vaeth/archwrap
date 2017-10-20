@@ -20,28 +20,9 @@ CalcXz() {
 	fi
 }
 
-Remove() {
-	n=
-	for i in $xz_opt
-	do	r=$i
-		for j
-		do	case $i in
-			$j)
-				r=
-				break;;
-			esac
-		done
-		[ -z "${r:++}" ] && continue
-		[ -z "${n:++}" ] && n=$r || n="$n $r"
-	done
-	xz_opt=$n
-}
-
-xz_opt=${XZ_OPT-}
-if [ -z "${xz_opt:++}" ]
-then	CalcXz
-else	Remove '--extreme'
+if [ -n "${XZ_OPT++}" ]
+then	xz_opt=$XZ_OPT
+	unset XZ_OPT
+else	CalcXz
 fi
-XZ_OPT='--extreme'
-export XZ_OPT
-exec "$l" $xz_opt ${1+"$@"}
+exec "$l" --extreme $xz_opt ${1+"$@"}
