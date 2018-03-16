@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
-exec brotli -w 24 -Z ${1+"$@"}
+exec brotli ${1+"$@"}
+# In brotli-1.0.3, -w 24 is automatic if input is file which is large enough.
+# So compressor's automatic choice is better unless we have stdin as input.

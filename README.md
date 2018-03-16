@@ -22,6 +22,8 @@ various archiver programs like
 - __arj__
 - __zoo__
 
+For unpacking even some more formats are supported (if binaries are available).
+
 It is in particular possible to invoke all archivers (keeping only the "best"
 result), to repack archives, pack to remote hosts etc.
 Note that also less popular archivers are supported.
@@ -57,8 +59,8 @@ If you do not want to put the symlinks into your path, you can
 source the `archwrap_alias` file (in a shell understanding the alias command)
 to obtain a similar effect in an interactive shell.
 
-For installation under Gentoo, you can use the ebuild from the mv overlay
-(which is available over layman).
+For installation under Gentoo, there is an ebuild in the `mv` repository
+(available by `app-select/eselect-repository` or `app-portage/layman`).
 
 ### Examples
 
