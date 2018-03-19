@@ -184,7 +184,7 @@ then	Push taropts '-H=exustar'
 	g)	CalcGzipbest $quick
 		if [ "$gziptext" = gzip ]
 		then	Push taropts '-z'
-			STAR_COMPRESS_FLAG='--best'
+			STAR_COMPRESS_FLAG='-9'
 			export STAR_COMPRESS_FLAG
 		else	tarcomp=false
 		fi;;

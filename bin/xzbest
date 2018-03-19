@@ -8,7 +8,7 @@ case ${0##*/} in
 esac
 
 CalcXz() {
-	xz_opt='--best'
+	xz_opt='-9'
 	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
 		&& [ -n "${m:++}" ] || return
 	[ "$m" -gt 1800000 ] && return
@@ -25,4 +25,4 @@ then	xz_opt=$XZ_OPT
 	unset XZ_OPT
 else	CalcXz
 fi
-exec "$l" --extreme $xz_opt ${1+"$@"}
+exec "$l" ${xz_opt}e ${1+"$@"}
