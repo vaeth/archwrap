@@ -8,21 +8,25 @@ case ${0##*/} in
 esac
 
 CalcXz() {
-	xz_opt='-9'
+	xz_opt='-9e'
 	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
 		&& [ -n "${m:++}" ] || return
 	[ "$m" -gt 1800000 ] && return
 	if [ "$m" -gt 950000 ]
-	then	xz_opt='-8'
+	then	xz_opt='-8e'
 	elif [ "$m" -gt 400000 ]
-	then	xz_opt='-7'
-	else	xz_opt='-6'
+	then	xz_opt='-7e'
+	else	xz_opt='-6e'
 	fi
 }
 
-if [ -n "${XZ_OPT++}" ]
-then	xz_opt=$XZ_OPT
-	unset XZ_OPT
-else	CalcXz
-fi
-exec "$l" ${xz_opt}e ${1+"$@"}
+case ${XZ_OPT:-/} in
+*[!-0123456789abcdefghijklmnopqrstuvwxyz]*)
+	xz_opt='-e '${XZ_OPT};;
+-[!-]*)
+	xz_opt=${XZ_OPT}e;;
+*)
+	CalcXz;;
+esac
+unset XZ_OPT
+exec "$l" ${xz_opt} ${1+"$@"}
