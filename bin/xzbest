@@ -20,7 +20,7 @@ CalcXz() {
 	fi
 }
 
-case ${XZ_OPT:-/} in
+case ${XZ_OPT:-n} in
 *[!-0123456789abcdefghijklmnopqrstuvwxyz]*)
 	xz_opt='-e '${XZ_OPT};;
 -[!-]*)
