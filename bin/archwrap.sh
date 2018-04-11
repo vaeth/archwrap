@@ -55,6 +55,11 @@ Exit() {
 	exit $retvalue
 }
 
+Fatal() {
+	ErrMessage "$*"
+	exit 2
+}
+
 Push() {
 	PushA_=`push.sh 2>/dev/null` || Fatal \
 "push.sh from https://github.com/vaeth/push (v2.0 or newer) required"

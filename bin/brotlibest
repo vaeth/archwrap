@@ -1,6 +1,90 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
-exec brotli ${1+"$@"}
-# In brotli-1.0.3, -w 24 is automatic if input is file which is large enough.
-# So compressor's automatic choice is better unless we have stdin as input.
+Fatal() {
+	Echo "${0##*/}: $*" >&2
+	exit 2
+}
+PushA_=`push.sh 2>/dev/null` || Fatal \
+"push.sh from https://github.com/vaeth/push (v2.0 or newer) required"
+eval "$PushA_"
+Push -c options
+Push -c files
+skip_calc=false
+BrotliMax() {
+	[ -z "${BROTLIMAX:-}" ] || return
+	BROTLIMAX=30
+	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
+		&& [ -n "${m:++}" ] || return
+	[ "$m" -gt 950000 ] && return
+	if [ "$m" -gt 400000 ]
+	then	BROTLIMAX=29
+	else	BROTLIMAX=28
+	fi
+}
+BrotliCalc() {
+	calcopt="--large_window=$BROTLIMAX"
+	[ "$file" != "-" ] || return
+	filesize=`stat -Lc '%s' -- "$file"` && [ -n "$filesize" ] || return
+	window=10
+	while [ "$window" -lt "$BROTLIMAX" ]
+	do	currsize=$(( 1 << $window ))
+		[ "$currsize" -ge "$filesize" ] && break
+		window=$(( $window + 1 ))
+	done
+	calcopt="--large_window=$window"
+}
+ShortOpt() {
+	shortopt=$1
+	while shortopt=${shortopt#?} && [ -n "$shortopt" ]
+	do	case $shortopt in
+		[w])
+			skip_calc=:
+			havearg=:
+			return;;
+		[oqwS])
+			havearg=:
+			return;;
+		esac
+	done
+	havearg=false
+}
+Brotli() {
+	$skip_calc || BrotliCalc
+	brotli ${calcopt:+"$calcopt"} ${1+"$@"} -- "$file"
+}
+last=false
+havearg=false
+for option
+do	if $last || $havearg
+	then	Push files "$option"
+		havearg=false
+		continue
+	fi
+	case	option in
+	-)
+		Push files "$option";;
+	--)
+		last=1
+		continue;;
+	--lgwin*|--large_window*)
+		Push options "$option"
+		skip_calc=:
+		continue;;
+	--*)
+		Push options "$option"
+		continue;;
+	-*)
+		ShortOpt "$option"
+		Push options "$option"
+		continue;;
+	esac
+	Push files "$option"
+done
+$skip_calc || BrotliMax
+Push files || Push files '-'
+eval "set -- $files"
+for file
+do	eval "Brotli $options" || exit
+done
+exit 0
