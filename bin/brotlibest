@@ -61,7 +61,7 @@ do	if $last || $havearg
 		havearg=false
 		continue
 	fi
-	case	option in
+	case $option in
 	-)
 		Push files "$option";;
 	--)
