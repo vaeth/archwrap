@@ -10,6 +10,61 @@ YesNo() {
 	:
 }
 
+IsNumeric() {
+	case ${1:-n} in
+	*[!0123456789]*)
+		return 1
+	esac
+	return 0
+}
+
+MaxCompressionMemory() {
+	[ -n "${MAX_COMPRESSION_MEMORY:-}" ] || \
+	MAX_COMPRESSION_MEMORY=`free 2>/dev/null|LC_ALL=C \
+sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` || MAX_COMPRESSION_MEMORY=
+	# Fallback is 1g + 1m + 1k (in k) -> 1m + 1k + 1
+	IsNumeric "$MAX_COMPRESSION_MEMORY" || MAX_COMPRESSION_MEMORY=1049601
+	# Forced minimum is 1m + 1k (in k) -> 1k + 1
+	[ $MAX_COMPRESSION_MEMORY -ge 1025 ] || MAX_COMPRESSION_MEMORY=1025
+}
+
+MaxLogMemory() {
+	MaxCompressionMemory
+	maxlogmemory=$(( $1 - 10 ))  # MAX_COMPRESSION_MEMORY is in k
+	while [ $MAX_COMPRESSION_MEMORY -le $(( 1 << $maxlogmemory )) ]
+	do	maxlogmemory=$(( $maxlogmemory - 1 ))
+	done
+	maxlogmemory=$(( $maxlogmemory + 10 ))
+}
+
+maxXz() {  # maxlogmemory - 17 is the option -[6789]
+	if [ $MAX_COMPRESSION_MEMORY -gt 690176 ]
+	then	maxlogmemory=26
+	elif [ $MAX_COMPRESSION_MEMORY -gt 378880 ]
+	then	maxlogmemory=25
+	elif [ $MAX_COMPRESSION_MEMORY -gt 190464 ]
+	then	maxlogmemory=24
+	else	maxlogmemory=23
+	fi
+}
+
+PrintFileSize() {
+	stat -Lc '%s' -- "$file" 2>/dev/null
+}
+
+Filesizelog() {
+	filesizelog=$maxlogmemory
+	[ $1 -le $maxlogmemory ] || return 0  # Skip calculation if minimal
+	[ x"$file" != x"-" ] || return 0
+	filesize=`PrintFileSize` || filesize=
+	IsNumeric "$filesize" || return 0
+	filesizelog=$1
+	while [ $filesizelog -lt $maxlogmemory ]
+	do	[ $filesize -gt $(( 1 << $filesizelog )) ] || return 0
+		filesizelog=$(( $filesizelog + 1 ))
+	done
+}
+
 which=`command -v which` || which=
 MakeExternal() {
 	[ x"$which" = x'which' ] && eval $1=\`which $2\` \

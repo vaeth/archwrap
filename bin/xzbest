@@ -1,32 +1,101 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
+. archwrap.sh
+set -f
+Push -c options
+Push -c files
+
 l=xz
 case ${0##*/} in
 *lz*)
 	l=lzma;;
 esac
 
-CalcXz() {
-	xz_opt='-9e'
-	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
-		&& [ -n "${m:++}" ] || return
-	[ "$m" -gt 1800000 ] && return
-	if [ "$m" -gt 950000 ]
-	then	xz_opt='-8e'
-	elif [ "$m" -gt 400000 ]
-	then	xz_opt='-7e'
-	else	xz_opt='-6e'
-	fi
-}
+eval "set -- $XZ_OPT \${1+\"\$@\"}"
 
-case ${XZ_OPT:-n} in
-*[!-0123456789abcdefghijklmnopqrstuvwxyz]*)
-	xz_opt='-e '${XZ_OPT};;
--[!-]*)
-	xz_opt=${XZ_OPT}e;;
-*)
-	CalcXz;;
-esac
+skip_calc=false
+ShortOpt() {
+	shortopt=$1
+	while shortopt=${shortopt#?} && [ -n "$shortopt" ]
+	do	case $shortopt in
+		[SFCMT])
+			havearg=:
+			return;;
+		esac
+	done
+	havearg=false
+}
+last=false
+havearg=false
+for option
+do	if $last || $havearg
+	then	Push files "$option"
+		havearg=false
+		continue
+	fi
+	case $option in
+	-)
+		Push files "$option";;
+	--)
+		last=:
+		continue;;
+	--files|--files0)
+		skip_calc=:
+		havearg=:
+		Push options "$option"
+		continue;;
+	--files*)
+		skip_calc=:
+		Push options "$option"
+		continue;;
+	--suffix|--format|--check|--block-size|--block-list|--flush-timeout|--memlimit-compress|--memlimit-decompress|--memlimit|--memory|--threads)
+		Push options "$option"
+		havearg=:
+		continue;;
+	--*)
+		Push options "$option"
+		continue;;
+	-*)
+		ShortOpt "$option"
+		Push options "$option"
+		continue;;
+	esac
+	Push files "$option"
+done
+
 unset XZ_OPT
-exec "$l" ${xz_opt} ${1+"$@"}
+
+MaxCompressionMemory
+maxlogmemory=23  # maxlogmemory - 17 is the option -[6789]
+if [ $MAX_COMPRESSION_MEMORY -gt 690176 ]
+then	maxlogmemory=26
+elif [ $MAX_COMPRESSION_MEMORY -gt 378880 ]
+then	maxlogmemory=25
+elif [ $MAX_COMPRESSION_MEMORY -gt 190464 ]
+then	maxlogmemory=24
+fi
+if $skip_calc || ! Push files
+then	Push options -$(( $maxlogmemory - 17 ))
+	if Push files
+	then	eval "set -- $options -- $files"
+	else	eval "set -- $options"
+	fi
+	exec "$l" "$@"
+	exit
+fi
+
+Xz() {
+	FilesizeLog 23
+	if [ x"$file" = x'-' ]
+	then	"$l"  ${1+"$@"} -$(( $filesizelog - 17 ))e
+	else	"$l"  ${1+"$@"} -$(( $filesizelog - 17 ))e -- "$file"
+	fi
+	"$l"  ${1+"$@"} -$(( $filesizelog - 17 ))e -- "$file"
+}
+Push files || Push files '-'
+eval "set -- $files"
+for file
+do	eval "Xz $options" || exit
+done
+exit 0

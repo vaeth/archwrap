@@ -1,39 +1,12 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
-Fatal() {
-	Echo "${0##*/}: $*" >&2
-	exit 2
-}
-PushA_=`push.sh 2>/dev/null` || Fatal \
-"push.sh from https://github.com/vaeth/push (v2.0 or newer) required"
-eval "$PushA_"
+. archwrap.sh
+set -f
 Push -c options
 Push -c files
+
 skip_calc=false
-BrotliMax() {
-	[ -z "${BROTLIMAX:-}" ] || return
-	BROTLIMAX=30
-	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
-		&& [ -n "${m:++}" ] || return
-	[ "$m" -gt 950000 ] && return
-	if [ "$m" -gt 400000 ]
-	then	BROTLIMAX=29
-	else	BROTLIMAX=28
-	fi
-}
-BrotliCalc() {
-	calcopt="--large_window=$BROTLIMAX"
-	[ "$file" != "-" ] || return
-	filesize=`stat -Lc '%s' -- "$file"` && [ -n "$filesize" ] || return
-	window=10
-	while [ "$window" -lt "$BROTLIMAX" ]
-	do	currsize=$(( 1 << $window ))
-		[ "$currsize" -ge "$filesize" ] && break
-		window=$(( $window + 1 ))
-	done
-	calcopt="--large_window=$window"
-}
 ShortOpt() {
 	shortopt=$1
 	while shortopt=${shortopt#?} && [ -n "$shortopt" ]
@@ -49,10 +22,6 @@ ShortOpt() {
 	done
 	havearg=false
 }
-Brotli() {
-	$skip_calc || BrotliCalc
-	brotli ${calcopt:+"$calcopt"} ${1+"$@"} -- "$file"
-}
 last=false
 havearg=false
 for option
@@ -65,7 +34,7 @@ do	if $last || $havearg
 	-)
 		Push files "$option";;
 	--)
-		last=1
+		last=:
 		continue;;
 	--lgwin*|--large_window*)
 		Push options "$option"
@@ -81,7 +50,24 @@ do	if $last || $havearg
 	esac
 	Push files "$option"
 done
-$skip_calc || BrotliMax
+
+if $skip_calc
+then	if Push files
+	then	eval "set -- $options -- $files"
+	else	eval "set -- a $options"
+		shift
+	fi
+	exec brotli "$@"
+	exit
+fi
+Brotli() {
+	Filesizelog 10
+	if [ x"$file" = x'-' ]
+	then	brotli ${1+"$@"} --large_window=$filesizelog
+	else	brotli ${1+"$@"} --large_window=$filesizelog -- "$file"
+	fi
+}
+MaxLogMemory 30
 Push files || Push files '-'
 eval "set -- $files"
 for file

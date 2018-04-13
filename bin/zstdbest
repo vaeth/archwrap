@@ -1,32 +1,64 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
 set -u
+. archwrap.sh
+set -f
+Push -c options
+Push -c files
+
 z=zstd
 case ${0##*/} in
-u*)
-	z=unzstd;;
-*cat)
-	z=zstdcat;;
 *mt)
 	z=zstdmt;;
 esac
 
-CalcZstd() {
-	zstd_opt='--long=31'
-	m=`free|LC_ALL=C sed -ne 's/Mem: *\([0-9]*\).*/\1/p'` \
-		&& [ -n "${m:++}" ] || return
-	[ "$m" -gt 1800000 ] && return
-	if [ "$m" -gt 950000 ]
-	then	zstd_opt='--long=30'
-	elif [ "$m" -gt 400000 ]
-	then	zstd_opt='--long=29'
-	else	zstd_opt='--long=28'
+ShortOpt() {
+	shortopt=$1
+	while shortopt=${shortopt#?} && [ -n "$shortopt" ]
+	do	case $shortopt in
+		[o])
+			havearg=:
+			return;;
+		esac
+	done
+	havearg=false
+}
+last=false
+havearg=false
+for option
+do	if $last || $havearg
+	then	Push files "$option"
+		havearg=false
+		continue
+	fi
+	case $option in
+	-)
+		Push files "$option";;
+	--)
+		last=:
+		continue;;
+	--*)
+		Push options "$option"
+		continue;;
+	-*)
+		ShortOpt "$option"
+		Push options "$option"
+		continue;;
+	esac
+	Push files "$option"
+done
+
+Zstd() {
+	Filesizelog 10
+	if [ x"$file" = x'-' ]
+	then	"$z" ${1+"$@"} --ultra -22 --long=$filesizelog
+	else	"$z" ${1+"$@"} --ultra -22 --long=$filesizelog -- "$file"
 	fi
 }
-
-if [ -n "${ZSTD_OPT++}" ]
-then	zstd_opt=$ZSTD_OPT
-	unset ZSTD_OPT
-else	CalcZstd
-fi
-exec "$z" --ultra -22 $zstd_opt ${1+"$@"}
+MaxLogMemory 31
+Push files || Push files '-'
+eval "set -- $files"
+for file
+do	eval "Zstd $options" || exit
+done
+exit 0

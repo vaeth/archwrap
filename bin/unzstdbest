@@ -1,1 +1,12 @@
-zstdbest
+#!/usr/bin/env sh
+# This script is part of Martin V\"ath's archwrap project.
+set -u
+set -f
+
+z=unzstd
+case ${0##*/} in
+*cat)
+	z=zstdcat;;
+esac
+
+exec "$z" --memory=4294967295 ${1+"$@"}
