@@ -12,7 +12,7 @@ case ${0##*/} in
 	l=lzma;;
 esac
 
-eval "set -- $XZ_OPT \${1+\"\$@\"}"
+eval "set -- ${XZ_OPT-} \${1+\"\$@\"}"
 
 skip_calc=false
 ShortOpt() {
