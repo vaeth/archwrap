@@ -3,62 +3,10 @@
 set -u
 . archwrap.sh
 set -f
-Push -c options
-Push -c files
-
 z=zstd
 case ${0##*/} in
 *mt)
 	z=zstdmt;;
 esac
-
-ShortOpt() {
-	shortopt=$1
-	while shortopt=${shortopt#?} && [ -n "$shortopt" ]
-	do	case $shortopt in
-		[o])
-			havearg=:
-			return;;
-		esac
-	done
-	havearg=false
-}
-last=false
-havearg=false
-for option
-do	if $last || $havearg
-	then	Push files "$option"
-		havearg=false
-		continue
-	fi
-	case $option in
-	-)
-		Push files "$option";;
-	--)
-		last=:
-		continue;;
-	--*)
-		Push options "$option"
-		continue;;
-	-*)
-		ShortOpt "$option"
-		Push options "$option"
-		continue;;
-	esac
-	Push files "$option"
-done
-
-Zstd() {
-	Filesizelog 10
-	if [ x"$file" = x'-' ]
-	then	"$z" ${1+"$@"} --ultra -22 --long=$filesizelog
-	else	"$z" ${1+"$@"} --ultra -22 --long=$filesizelog -- "$file"
-	fi
-}
 MaxLogMemory 31
-Push files || Push files '-'
-eval "set -- $files"
-for file
-do	eval "Zstd $options" || exit
-done
-exit 0
+exec "$z" --ultra -22 --long=$maxlogmemory ${1+"$@"}
