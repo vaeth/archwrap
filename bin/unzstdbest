@@ -9,4 +9,4 @@ case ${0##*/} in
 	z=zstdcat;;
 esac
 
-exec "$z" --memory=4294967295 ${1+"$@"}
+exec "$z" --long=31 ${1+"$@"}

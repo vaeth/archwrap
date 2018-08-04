@@ -8,5 +8,5 @@ case ${0##*/} in
 *mt)
 	z=zstdmt;;
 esac
-MaxLogMemory 31
+MaxLogMemory 30
 exec "$z" --ultra -22 --long=$maxlogmemory ${1+"$@"}
