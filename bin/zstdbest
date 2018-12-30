@@ -9,4 +9,4 @@ case ${0##*/} in
 	z=zstdmt;;
 esac
 MaxLogMemory 30
-exec "$z" --ultra -22 --long=$maxlogmemory ${1+"$@"}
+exec "$z" --ultra -22 --long=$maxlogmemory --rsyncable ${1+"$@"}
