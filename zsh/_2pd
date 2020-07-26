@@ -1,4 +1,6 @@
 #compdef 2pd 2ppd
+# (C) Martin V\"ath <martin at mvath.de>
+# SPDX-License-Identifier: BSD-3-Clause
 _arguments -S -A '-*' : \
 '(* -)'{'--help','--Help','-h','-\\?'}'[help]' \
 '-tmp[Use current directory instead of /tmp for tempdirectory]' \

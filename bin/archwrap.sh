@@ -1,6 +1,8 @@
 #!/bin/sh
 # This script is part of Martin V\"ath's archwrap project.
 # It provides shell functions for scripts like "tgzd" "zipd" "u"
+# (C) Martin V\"ath <martin at mvath.de>
+# SPDX-License-Identifier: BSD-3-Clause
 
 YesNo() {
 	case ${1:-n} in

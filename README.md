@@ -4,9 +4,10 @@ A collection of POSIX shell scripts to invoke archiver programs
 
            (s)tar/gzip/bzip2/xz/zip/7z/lzma/lrzip/arj/zoo/brotli/zopfli/zstd
 
-Author: Martin Väth <vaeth@mvath.de>
+Author: Martin Väth <martin at mvath.de>
 
 This project is under the BSD license 2.0 (“3-clause BSD license”).
+SPDX-License-Identifier: BSD-3-Clause
 
 These are some POSIX shell scripts which form an interface to
 various archiver programs like

@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 # This script is part of Martin V\"ath's archwrap project.
+# (C) Martin V\"ath <martin at mvath.de>
+# SPDX-License-Identifier: BSD-3-Clause
 set -u
 exec bzip2 -9 ${1+"$@"}

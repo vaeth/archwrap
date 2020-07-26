@@ -1,4 +1,6 @@
 #compdef 7zd brd bzipd gzipd lrzd lz4d lzmad t7zd tard tbrd tbzd tgzd tlrd tlzd tlz4d txzd tzsd xzd zstdd
+# (C) Martin V\"ath <martin at mvath.de>
+# SPDX-License-Identifier: BSD-3-Clause
 _arguments -s -S -A '-*' : \
 '(* -)'{'-h','-H'}'[help]' \
 '-R+[store output in PATH; use e.g. -R - for piping to stdout]:output-path:_files -/' \

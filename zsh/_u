@@ -1,4 +1,6 @@
 #compdef u ud uv
+# (C) Martin V\"ath <martin at mvath.de>
+# SPDX-License-Identifier: BSD-3-Clause
 _arguments -s -S -A '-*' : \
 '(* -)'{'-h','-H'}'[help]' \
 '-d[uncompress into new directory ./ARCHIVE instead of .]' \
