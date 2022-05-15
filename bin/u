@@ -152,13 +152,13 @@ Getf() {
 	for i in '' .tar .TAR
 	do	for j in \
 			z br bro brotli tbr zst zstd tzs tzst tzstd \
-			bz2 bz tbz2 tbz gz tgz taz dir tl4 tz4 tlz4 lz4 \
-			7z t7z lz lzm lzma xz tlz txz lrz tlr tlrz lha lzh \
-			arj arz zip jar xpi crate cra apk okular rar \
+			bz2 bz3 bz tbz2 tbz3 tb3 tbz gz tgz taz dir tl4 tz4 \
+			tlz4 lz4 7z t7z lz lzm lzma xz tlz txz lrz tlr tlrz \
+			lha lzh arj arz zip jar xpi crate cra apk okular rar \
 			Z BR BRO BROTLI TBR ZST ZSTD TZS TZST TZSTD \
-			BZ2 BZ TBZ2 TBZ GZ TGZ TAZ DIR TL4 TZ4 TLZ4 LZ4 \
-			7Z T7Z LZ LZM LZMA XZ TLZ TXZ LRZ TLR TLRZ LHA LZH \
-			ARJ ARZ ZIP JAR XPI CRATE CRA APK OKULAR RAR
+			BZ2 BZ3 BZ TBZ2 TBZ3 TB3 TBZ GZ TGZ TAZ DIR TL4 TZ4 \
+			TLZ4 LZ4 7Z T7Z LZ LZM LZMA XZ TLZ TXZ LRZ TLR TLRZ \
+			LHA LZH ARJ ARZ ZIP JAR XPI CRATE CRA APK OKULAR RAR
 		do	f=$1$i.$j
 			test -f "$f" && return
 		done
@@ -232,6 +232,9 @@ DoCases() {
 	*.tbz|*.tbz2|*.TBZ|*.TBZ2)
 		typ='tar.bz2'
 		full=:;;
+	*.tb3|*.tbz3|*.TB3|*.TBZ3)
+		typ='tar.bz3'
+		full=:;;
 	*.tlz|*.TLZ)
 		typ='tar.lzma'
 		full=:;;
@@ -252,6 +255,8 @@ DoCases() {
 		typ='zst';;
 	*.lz4|*.Lz4)
 		typ='lz4';;
+	*.bz3|*.BZ3)
+		typ='bz3';;
 	*.bz|*.bz2|*.BZ|*.BZ2)
 		typ='bz2';;
 	*.lm|*.lzm|*.lzma|*.LM|*.LZM|*.LZMA)
@@ -297,7 +302,7 @@ DoCases() {
 	return 0
 }
 
-unset bzip brotli zstdbest lz4 gzip lzma xz lrzip za unzip unarj lha unrar
+unset bzip bzip3 brotli zstdbest lz4 gzip lzma xz lrzip za unzip unarj lha unrar
 DoIt() {
 	case $typ in
 tar)
@@ -403,6 +408,24 @@ tar.bz2)
 				"$tarprg" -t $verbose -f -
 		fi;;
 	t*)	"$bzip" -t -v -- "$f";;
+	esac || MyErr;;
+tar.bz3)
+	OptExternal bzip3
+	case $mode in
+	u*)	IntoDir || return
+		eval "set -- a $taropts"
+		shift
+		if $tar_knows_use_compress_program
+		then	"$tarprg" -x $verboseopt $taruse "$bzip3" ${1+"$@"} -f "$f"
+		else	"$bzip3" -d -c -- "$f" | \
+				"$tarprg" -x $verboseopt ${1+"$@"} -f -
+		fi;;
+	s*)	if $tar_knows_use_compress_program
+		then	"$tarprg" -t $verbose $taruse "$bzip3" -f "$f"
+		else	"$bzip3" -d -c -- "$f" | \
+				"$tarprg" -t $verbose -f -
+		fi;;
+	t*)	"$bzip3" -t -- "$f" && echo "$f OK";;
 	esac || MyErr;;
 tar.lzma)
 	OptExternal lzma
@@ -526,6 +549,19 @@ bz2)
 		fi;;
 	s*)	"$bzip" -l -v -- "$f";;
 	t*)	"$bzip" -t -v -- "$f";;
+	esac || MyErr;;
+bz3)
+	OptExternal bzip3
+	case $mode in
+	u*)	IntoDir || return
+		if $mdir
+		then	x=$name.bz3
+			ln -s -- "$f" "$x" || cp -a -- "$f" "$x" \
+				&& "$bzip3" -d -- "$x"
+		else	"$bzip3" -d -c -- "$f" >"$pwdname"
+		fi;;
+	s*)	MyErrNot;;
+	t*)	"$bzip3" -t -- "$f" && echo "$f OK";;
 	esac || MyErr;;
 lzma)
 	OptExternal lzma

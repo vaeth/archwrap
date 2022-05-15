@@ -26,6 +26,8 @@ _arguments -s -S -A '-*' : \
 '-G[unselect gzip]' \
 '-i[select lz4]' \
 '-I[unselect lz4]' \
+'-3[select bzip3]' \
+'-2[unselect bzip3]' \
 '-7[select 7z]' \
 '-/[unselect 7z]' \
 '-l[select lzma]' \

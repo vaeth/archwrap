@@ -23,6 +23,7 @@ where option is one of the following:
 -o/O select/unselect brotli
 -y/Y select/unselect zstd
 -b/B select/unselect bzip
+-3/2 select/unselect bzip3
 -g/G select/unselect gzip
 -i/I select/unselect lz4
 -7// select/unselect 7z
@@ -43,11 +44,12 @@ where option is one of the following:
 -Q   quick: Use gzip instead of zopfli (even if zopfli is available)"
 	exit ${1:-1}
 }
-unset zipd tgzd gzipbest brotlibest bzipbest za lz4best \
+unset zipd tgzd gzipbest brotlibest bzipbest bzip3best za lz4best \
 	lzmabest xzbest zstdbest lrzip
 tgzapp='tgz'
 tbrapp='tbr'
 tbzapp='tbz'
+tb3app='tb3'
 svzapp='t7z'
 tz4app='tz4'
 lzmapp='tlz'
@@ -73,6 +75,7 @@ Selectall() {
 	withtgz=:
 	withtbr=:
 	withtbz=:
+	withtb3=:
 	withsvz=:
 	withtz4=:
 	withlzm=:
@@ -86,6 +89,7 @@ Selectnone() {
 	withtgz=false
 	withtbr=false
 	withtbz=false
+	withtb3=false
 	withsvz=false
 	withtz4=false
 	withlzm=false
@@ -113,7 +117,7 @@ case ${0##*/} in
 esac
 
 OPTIND=1
-while getopts 'vPqQXdcCSTsnaA7/iIlLrYyWwRNtUzZoObBgGpFf0512486EhH' opt
+while getopts 'vPqQXdcCSTsnaA327/iIlLrYyWwRNtUzZoObBgGpFf0512486EhH' opt
 do	case $opt in
 	v)	verbose=:;;
 	P)	DeselectUnpopular;;
@@ -122,6 +126,7 @@ do	case $opt in
 	X)	tgzapp='tar.gz'
 		tbrapp='tar.br'
 		tbzapp='tar.bz2'
+		tb3app='tar.bz3'
 		svzapp='tar.7z'
 		tz4app='tar.lz4'
 		lzmapp='tar.lzma'
@@ -144,6 +149,7 @@ do	case $opt in
 	z)	withzip=:;;
 	o)	withtbr=:;;
 	b)	withtbz=:;;
+	3)	withtb3=:;;
 	g)	withtgz=:;;
 	7)	withsvz=:;;
 	i)	withtz4=:;;
@@ -156,6 +162,7 @@ do	case $opt in
 	Z)	withzip=false;;
 	O)	withtbr=false;;
 	B)	withtbz=false;;
+	2)	withtb3=false;;
 	G)	withtgz=false;;
 	/)	withsvz=false;;
 	I)	withtz4=false;;
@@ -243,6 +250,7 @@ Dopack() {
 	tgznow=$withtgz
 	tbrnow=$withtbr
 	tbznow=$withtbz
+	tb3now=$withtb3
 	svznow=$withsvz
 	tz4now=$withtz4
 	lzmnow=$withlzm
@@ -254,6 +262,7 @@ Dopack() {
 		$tgznow && test -s "$destname.$tgzapp" && tgznow=false
 		$tbrnow && test -s "$destname.$tbrapp" && tbrnow=false
 		$tbznow && test -s "$destname.$tbzapp" && tbznow=false
+		$tb3now && test -s "$destname.$tb3app" && tb3now=false
 		$svznow && test -s "$destname.$svzapp" && svznow=false
 		$tz4now && test -s "$destname.$tz4app" && tz4now=false
 		$lzmnow && test -s "$destname.$lzmapp" && lzmnow=false
@@ -261,8 +270,8 @@ Dopack() {
 		$tzsnow && test -s "$destname.$txzapp" && tzsnow=false
 		$lrznow && test -s "$destname.$lrzapp" && lrznow=false
 	fi
-	if $tgznow || $tbrnow || $tbznow || $svznow || $tz4now || $lzmnow || \
-		$txznow || $tzsnow || $lrznow
+	if $tgznow || $tbrnow || $tbznow || $tb3now || $svznow || $tz4now || \
+		 $lzmnow || $txznow || $tzsnow || $lrznow
 	then	tarnow=:
 	fi
 	$preserv && $tarnow && test -s "$destname.tar" && tarnow=false
@@ -302,6 +311,14 @@ Dopack() {
 		OptExternal bzipbest
 		"$bzipbest" -k -c -- "$destname.tar" >|"$nameb" \
 			|| Errunp 'bzip2' "$nameb"
+	fi
+	Compare
+	nameb=$destname.$tb3app
+	if $tb3now
+	then	EchoCond "Creating $nameb"
+		OptExternal bzip3best
+		"$bzip3best" -c -- "$destname.tar" >|"$nameb" \
+			|| Errunp 'bzip3' "$nameb"
 	fi
 	Compare
 	nameb=$destname.$svzapp

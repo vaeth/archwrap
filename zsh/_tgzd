@@ -7,13 +7,14 @@ _arguments -s -S -A '-*' : \
 '-g[use gzip (appendix .tgz or .tar.gz)]' \
 '-B[use brotli (appendix .tbr or .tar.br)]' \
 '-b[use bzip2 (appendix .tbz or .tar.bz2)]' \
+'-3[use bz3 (appendix .tb3 or .tar.bz3)]' \
 '-z[use zstd (appendix .tzs or .tar.zst)]' \
 '-l[use lzma (appendix .tlz or .tar.lzma)]' \
 '-L[use xz (appendix .txz or .tar.xz)]' \
 '-7[use 7z (appendix .t7z or .tar.7z)]' \
 '-4[use lz4 (appendix .tz4 or .tar.lz4)]' \
 '-r[use lrzip (appendix .tlr or .tar.lrz)]' \
-'-t[use Tar (appendix .tar)]' \
+'-t[use tar (appendix .tar)]' \
 '-X[use long names (appendix .tar.gz over .tgz)]' \
 '-x[use short names (appendix .tgz over .tar.gz)]' \
 '-A[store extended attributes]' \
