@@ -2,7 +2,7 @@
 
 A collection of POSIX shell scripts to invoke archiver programs
 
-           (s)tar/gzip/bzip2/xz/zip/7z/lzma/lrzip/arj/zoo/brotli/zopfli/zstd
+    (s)tar/gzip/bzip2/bzip3/xz/zip/7z/lzma/lrzip/arj/zoo/brotli/zopfli/zstd
 
 Author: Martin Väth <martin at mvath.de>
 
@@ -16,6 +16,7 @@ various archiver programs like
 - __zstd__
 - __gzip__/__zopfli__
 - __bzip2__
+- __bzip3__
 - __xz__/__lzma__
 - __zip__
 - __7z__

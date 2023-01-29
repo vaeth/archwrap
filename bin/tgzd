@@ -213,7 +213,7 @@ else	! $xattr || ! $tar_knows_xattr || Push taropts '--xattrs'
 	B)	OptExternal brotlibest
 		Push taropts '--use-compress-program' "$brotlibest";;
 	b)	OptExternal bzipbest
-		Push taropts '--use-compress-program' "$bzip3best";;
+		Push taropts '--use-compress-program' "$bzipbest";;
 	3)	OptExternal bzip3best
 		Push taropts '--use-compress-program' "$bzip3best";;
 	z)	OptExternal zstdbest
