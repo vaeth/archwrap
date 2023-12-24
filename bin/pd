@@ -335,7 +335,7 @@ Dopack() {
 	if $tz4now
 	then	EchoCond "Creating $nameb"
 		OptExternal lz4best
-		"$lz4best" $quietopt "$nameb" "$destname.tar" \
+		"$lz4best" $quietopt "$destname.tar" "$nameb" \
 			|| Errunp 'lz4' "$nameb"
 	fi
 	Compare

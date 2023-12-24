@@ -88,7 +88,7 @@ then	Push options -$(( $maxlogmemory - 17 ))
 fi
 
 Xz() {
-	FilesizeLog 23
+	Filesizelog 23
 	if [ x"$file" = x'-' ]
 	then	"$l"  ${1+"$@"} -$(( $filesizelog - 17 ))e
 	else	"$l"  ${1+"$@"} -$(( $filesizelog - 17 ))e -- "$file"

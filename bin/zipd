@@ -78,7 +78,7 @@ do	stat=0
 		fi
 	else	PushTopack || {
 			stat=2
-			Error $stat "not creating empty archive $archive"
+			Error $stat "not creating empty archive $name"
 		}
 	fi
 	[ $stat -eq 0 ] && \

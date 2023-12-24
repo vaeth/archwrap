@@ -27,29 +27,31 @@ ShortOpt() {
 last=false
 havearg=false
 for option
-do	if $last || $havearg
-	then	Push files "$option"
+do	if $havearg
+	then	Push options "$option"
 		havearg=false
 		continue
 	fi
-	case $option in
-	-)
+	if ! $last
+		then	case $option in
+		-)
 		Push files "$option";;
-	--)
-		last=:
-		continue;;
-	--lgwin*|--large_window*)
-		Push options "$option"
-		skip_calc=:
-		continue;;
-	--*)
-		Push options "$option"
-		continue;;
-	-*)
-		ShortOpt "$option"
-		Push options "$option"
-		continue;;
-	esac
+		--)
+			last=:
+			continue;;
+		--lgwin*|--large_window*)
+			Push options "$option"
+			skip_calc=:
+			continue;;
+		--*)
+			Push options "$option"
+			continue;;
+		-*)
+			ShortOpt "$option"
+			Push options "$option"
+			continue;;
+		esac
+	fi
 	Push files "$option"
 done
 
