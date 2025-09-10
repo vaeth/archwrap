@@ -214,7 +214,7 @@ DoCases() {
 	full=false
 	name=${f%.*}
 	case ${f##*/} in
-	*.tar|*.TAR)
+	*.tar|*.cbt|*.TAR|*.CBT)
 		typ=tar
 		full=:;;
 	*.dir|*.taz|*.tgz|*.crate|*.cra|*.DIR|*.TAZ|*.TGZ|*.CRATE|*.CRA)
@@ -267,7 +267,7 @@ DoCases() {
 		typ='lrz';;
 	*.7z|*.7z)
 		typ='7z';;
-	*.zip|*.jar|*.xpi|*.apk|*.okular|*.ZIP|*.JAR|*.XPI|*.APK|*.OKULAR)
+	*.zip|*.jar|*.xpi|*.apk|*.okular|*.cbz|*.ZIP|*.JAR|*.XPI|*.APK|*.OKULAR|*.CBZ)
 		typ='zip'
 		full=:;;
 	*.arz|*.ARZ)
@@ -278,7 +278,7 @@ DoCases() {
 	*.lha|*.lzh|*.LHA|*.LZH)
 		typ='lha'
 		full=:;;
-	*.rar|*.RAR)
+	*.rar|*.cbr|*.RAR|*.CBR)
 		typ='rar'
 		full=:;;
 	*)
